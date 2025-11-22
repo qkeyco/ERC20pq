@@ -12,6 +12,14 @@ import { IStarkVerifier } from "./interfaces/IStarkVerifier.sol";
 /// @author EthVaultPQ Team
 contract ERC21PQToken is OFT {
     // =============================================================
+    //                         CONSTANTS
+    // =============================================================
+
+    /// @notice Prime field modulus for STARK proofs (Cairo field)
+    uint256 constant STARK_PRIME =
+        3618502788666131213697322783095070105623107215331596699973092056135872020481;
+
+    // =============================================================
     //                           STORAGE
     // =============================================================
 
@@ -154,9 +162,10 @@ contract ERC21PQToken is OFT {
         require(publicInputs.length >= 5, "Invalid public inputs");
         require(address(uint160(publicInputs[0])) == msg.sender, "Proof not for sender");
 
-        // Verify commitment matches
-        bytes32 proofCommitment = bytes32(publicInputs[4]);
-        if (proofCommitment != hdCommitment[msg.sender]) {
+        // Verify commitment matches (reduced to STARK field)
+        uint256 proofCommitment = publicInputs[4];
+        uint256 expectedCommitment = uint256(hdCommitment[msg.sender]) % STARK_PRIME;
+        if (proofCommitment != expectedCommitment) {
             revert InvalidCommitment();
         }
 
@@ -201,7 +210,7 @@ contract ERC21PQToken is OFT {
         address proofTo = address(uint160(publicInputs[1]));
         uint256 proofAmount = publicInputs[2];
         uint256 proofNonce = publicInputs[3];
-        bytes32 proofCommitment = bytes32(publicInputs[4]);
+        uint256 proofCommitment = publicInputs[4];
 
         // Verify inputs match
         require(proofFrom == from, "From mismatch");
@@ -213,8 +222,9 @@ contract ERC21PQToken is OFT {
             revert InvalidNonce();
         }
 
-        // Verify commitment
-        if (proofCommitment != hdCommitment[from]) {
+        // Verify commitment (reduced to STARK field)
+        uint256 expectedCommitment = uint256(hdCommitment[from]) % STARK_PRIME;
+        if (proofCommitment != expectedCommitment) {
             revert InvalidCommitment();
         }
 

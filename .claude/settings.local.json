@@ -3,7 +3,10 @@
     "allow": [
       "Bash(git submodule add:*)",
       "Bash(forge build:*)",
-      "Bash(~/.foundry/bin/forge build:*)"
+      "Bash(~/.foundry/bin/forge build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm i:*)"
     ],
     "deny": [],
     "ask": []
