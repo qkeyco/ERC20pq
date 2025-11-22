@@ -114,13 +114,13 @@ Available Commands:
     const hours = args[0] ? parseInt(args[0]) : null;
 
     try {
-      const variables: any = { first: 100 };
+      const now = Math.floor(Date.now() / 1000);
+      const timestamp_gt = hours ? (now - (hours * 3600)).toString() : "0";
 
-      if (hours) {
-        const now = Math.floor(Date.now() / 1000);
-        const hoursAgo = now - (hours * 3600);
-        variables.timestamp_gt = hoursAgo.toString();
-      }
+      const variables = {
+        first: 100,
+        timestamp_gt
+      };
 
       const result = await apolloClient.query({
         query: GET_ZK_TRANSFERS,
@@ -166,7 +166,7 @@ Global Statistics:
   Total ZK Transfers: ${stats.totalZKTransfers}
   Total ZK Failures: ${stats.totalZKProofFailures}
   Total Transfers: ${stats.totalTransfers}
-  Last Updated: ${new Date(parseInt(stats.lastUpdated)).toLocaleString()}
+  Last Updated: ${new Date(parseInt(stats.lastUpdated) * 1000).toLocaleString()}
 `,
         data: stats,
       };
