@@ -125,26 +125,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       const hdSecret = await getHDSecret();
       const commitment = await computeCommitment(hdSecret);
 
-      // Show confirmation dialog
-      const confirmed = await snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            heading('Setup Quantum Protection'),
-            text('This creates your quantum-resistant key and enables protection.'),
-            text('Your secret is stored safely in this Snap.'),
-            copyable(commitment.slice(0, 20) + '...'),
-            text('Only you can authorize transfers after this.'),
-          ]),
-        },
-      });
-
-      if (!confirmed) {
-        throw new Error('User rejected the request');
-      }
-
-      // Encode transaction data for combined function
+      // Skip Snap confirmation - MetaMask will confirm
       const data = iface.encodeFunctionData('setupProtection', [commitment]);
 
       return {
@@ -201,26 +182,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw new Error('Token address is required');
       }
 
-      // Show confirmation dialog
-      const confirmed = await snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            heading('Enable ZK Guard'),
-            text('This will enable ZK guard protection on your tokens.'),
-            text(`Token: ${params.tokenAddress}`),
-            text('⚠️ After enabling, you can only transfer using ZK proofs.'),
-            text('Normal transfers will be blocked.'),
-          ]),
-        },
-      });
-
-      if (!confirmed) {
-        throw new Error('User rejected the request');
-      }
-
-      // Encode transaction data
+      // Skip Snap confirmation - MetaMask will confirm
       const data = iface.encodeFunctionData('enableZKGuard', []);
 
       return {
@@ -240,24 +202,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       const hdSecret = await getHDSecret();
       const commitment = await computeCommitment(hdSecret);
 
-      // Show confirmation dialog
-      const confirmed = await snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            heading('Disable ZK Guard'),
-            text('This will disable ZK guard protection on your tokens.'),
-            text(`Token: ${params.tokenAddress}`),
-            text('⚠️ After disabling, normal transfers will work again.'),
-            text('You will need to provide a STARK proof to prove ownership.'),
-          ]),
-        },
-      });
-
-      if (!confirmed) {
-        throw new Error('User rejected the request');
-      }
+      // Skip Snap confirmation - MetaMask will confirm
 
       // Generate STARK proof for ownership verification
       const { proof, publicInputs } = await generateStarkProof(
