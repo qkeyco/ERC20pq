@@ -8,6 +8,7 @@ import { PizzaMerchant } from "../src/demos/PizzaMerchant.sol";
 import { TinyDex } from "../src/demos/TinyDex.sol";
 import { MockUSD } from "../src/mocks/MockUSD.sol";
 import { MockLzEndpoint } from "../src/mocks/MockLzEndpoint.sol";
+import { SendParam, MessagingFee } from "@layerzerolabs/oapp-evm/contracts/oft/interfaces/IOFT.sol";
 
 /// @title ERC21PQTokenTest
 /// @notice Comprehensive tests for ERC-21 ZK-guarded token with STARK proofs
@@ -70,6 +71,11 @@ contract ERC21PQTokenTest is Test {
 
         // Give Alice some tokens
         token.transfer(alice, 10_000 * 10 ** 18);
+
+        // Configure peer for cross-chain tests (chain ID 2)
+        // In real deployment, this would be the token contract on the destination chain
+        bytes32 peerAddress = bytes32(uint256(uint160(address(token))));
+        token.setPeer(2, peerAddress);
 
         vm.stopPrank();
     }
@@ -211,8 +217,9 @@ contract ERC21PQTokenTest is Test {
         uint256[] memory publicInputs = new uint256[](5);
         bytes memory proof = new bytes(1024);
 
-        vm.expectRevert(ERC21PQToken.ZKGuardNotEnabled.selector);
-        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        // Should return false and emit ZKProofFailed event (no longer reverts)
+        bool success = token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        assertFalse(success, "Should return false when guard not enabled");
     }
 
     function test_TransferZK_RevertIfInvalidNonce() public {
@@ -235,8 +242,13 @@ contract ERC21PQTokenTest is Test {
         bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
-        vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
-        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        // Should return false and emit ZKProofFailed event (no longer reverts)
+        bool success = token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        assertFalse(success, "Should return false with invalid nonce");
+
+        // Verify no transfer occurred
+        assertEq(token.balanceOf(bob), 0);
+        assertEq(token.zkNonce(alice), 0);
     }
 
     // =============================================================
@@ -364,5 +376,298 @@ contract ERC21PQTokenTest is Test {
         token.bindHD(commitment);
 
         assertEq(token.getCommitment(alice), commitment);
+    }
+
+    // =============================================================
+    //                 CROSS-CHAIN ZK SEND TESTS
+    // =============================================================
+
+    /// @notice Test that regular send() is blocked for ZK-guarded accounts
+    function test_Send_RevertsWhenGuarded() public {
+        // Setup: Alice enables ZK guard
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+
+        // Try to use regular send() - should revert
+        SendParam memory sendParam = SendParam({
+            dstEid: 2, // Destination chain
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: 100 * 10 ** 18,
+            minAmountLD: 100 * 10 ** 18,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        vm.deal(alice, 1 ether);
+        vm.expectRevert(ERC21PQToken.ZKGuardEnabled_UseSendZK.selector);
+        token.send{value: 0.01 ether}(sendParam, fee, alice);
+        vm.stopPrank();
+    }
+
+    /// @notice Test sendZK() with valid STARK proof
+    function test_SendZK_WithValidProof() public {
+        // Setup: Alice enables ZK guard
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        uint256 sendAmount = 100 * 10 ** 18;
+
+        // Build SendParam
+        SendParam memory sendParam = SendParam({
+            dstEid: 2, // Destination chain
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: sendAmount,
+            minAmountLD: sendAmount,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        // Build proof and public inputs
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = sendAmount;
+        publicInputs[3] = 0; // First send, nonce = 0
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        // Execute sendZK
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+
+        // Verify tokens were burned on source chain
+        assertEq(token.balanceOf(alice), 10_000 * 10 ** 18 - sendAmount);
+
+        // Verify nonce was incremented
+        assertEq(token.zkNonce(alice), 1);
+
+        // Verify message was sent via LayerZero
+        assertEq(lzEndpoint.getSentMessagesCount(), 1);
+    }
+
+    /// @notice Test sendZK() reverts with invalid nonce
+    function test_SendZK_RevertWithInvalidNonce() public {
+        // Setup
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        uint256 sendAmount = 100 * 10 ** 18;
+
+        SendParam memory sendParam = SendParam({
+            dstEid: 2,
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: sendAmount,
+            minAmountLD: sendAmount,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        // Build proof with wrong nonce
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = sendAmount;
+        publicInputs[3] = 1; // Wrong nonce (should be 0)
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+    }
+
+    /// @notice Test sendZK() reverts when not guarded
+    function test_SendZK_RevertWhenNotGuarded() public {
+        uint256 sendAmount = 100 * 10 ** 18;
+
+        SendParam memory sendParam = SendParam({
+            dstEid: 2,
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: sendAmount,
+            minAmountLD: sendAmount,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        uint256[] memory publicInputs = new uint256[](5);
+        bytes memory proof = new bytes(1024);
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        vm.expectRevert(ERC21PQToken.ZKGuardNotEnabled.selector);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+    }
+
+    /// @notice Test sendZK() with invalid proof
+    function test_SendZK_RevertWithInvalidProof() public {
+        // Setup
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        uint256 sendAmount = 100 * 10 ** 18;
+
+        SendParam memory sendParam = SendParam({
+            dstEid: 2,
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: sendAmount,
+            minAmountLD: sendAmount,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        // Build valid public inputs but empty proof (MockVerifier rejects empty proofs)
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = sendAmount;
+        publicInputs[3] = 0;
+        publicInputs[4] = uint256(commitment);
+
+        // Empty proof - should be rejected
+        bytes memory proof = new bytes(1024);
+        // Don't set proof[0] = 0x01, so verifier returns false
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        vm.expectRevert(ERC21PQToken.InvalidProof.selector);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+    }
+
+    /// @notice Test replay attack prevention with nonce
+    function test_SendZK_ReplayAttackPrevention() public {
+        // Setup
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        uint256 sendAmount = 100 * 10 ** 18;
+
+        SendParam memory sendParam = SendParam({
+            dstEid: 2,
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: sendAmount,
+            minAmountLD: sendAmount,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        // First send with nonce 0
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = sendAmount;
+        publicInputs[3] = 0;
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        vm.deal(alice, 2 ether);
+
+        // First send succeeds
+        vm.prank(alice);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+        assertEq(token.zkNonce(alice), 1);
+
+        // Try to replay the same proof - should fail because nonce is now 1
+        vm.prank(alice);
+        vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+
+        // Second send with correct nonce succeeds
+        publicInputs[3] = 1; // Updated nonce
+        vm.prank(alice);
+        token.sendZK{value: 0.01 ether}(sendParam, fee, alice, proof, publicInputs);
+        assertEq(token.zkNonce(alice), 2);
+    }
+
+    /// @notice Test that unguarded accounts can use regular send()
+    function test_Send_WorksWhenNotGuarded() public {
+        SendParam memory sendParam = SendParam({
+            dstEid: 2,
+            to: bytes32(uint256(uint160(bob))),
+            amountLD: 100 * 10 ** 18,
+            minAmountLD: 100 * 10 ** 18,
+            extraOptions: "",
+            composeMsg: "",
+            oftCmd: ""
+        });
+
+        MessagingFee memory fee = MessagingFee({
+            nativeFee: 0.01 ether,
+            lzTokenFee: 0
+        });
+
+        uint256 balanceBefore = token.balanceOf(alice);
+
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        token.send{value: 0.01 ether}(sendParam, fee, alice);
+
+        // Tokens should be burned
+        assertEq(token.balanceOf(alice), balanceBefore - 100 * 10 ** 18);
+
+        // Message should be sent
+        assertEq(lzEndpoint.getSentMessagesCount(), 1);
     }
 }

@@ -35,14 +35,30 @@
 - Testnet: `forge script script/Deploy.s.sol:DeployScript --rpc-url <RPC_URL> --broadcast`
 
 ### Network Configuration
-- **Network**: Tenderly Fork of Ethereum Mainnet
-- **Chain ID**: 73571
-- **RPC URL**: https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f
-- **LayerZero Endpoint**: 0x1a44076050125825900e736c501f859c50fE728c (Ethereum Mainnet V2)
+- **Network**: Tenderly Fork of Base Mainnet
+- **Chain ID**: 8453
+- **RPC URL**: https://virtual.base.us-west.rpc.tenderly.co/faa3abed-5400-4dc8-87ec-6091314a56cf
+- **Admin RPC**: https://virtual.base.us-west.rpc.tenderly.co/2d65fb3a-1263-493d-bd81-9c4b76763a73
+- **LayerZero Endpoint**: 0x1a44076050125825900e736c501f859c50fE728c (Base V2)
+
+### Deployed Contracts (Tenderly Base)
+- **Token**: 0x420366e5f35d53a2c0E3192f0C8fc6449509C875
+- **Merchant**: 0x4eE979DDDb05523A85C40795c0389B9e08e3c693
+- **Verifier**: 0x23867734fEB2419bFFbE6203f726D3ED1f47b758
+- **DEX**: 0x895bAE9C00D2670feE66325Fc17b56440deEB002
 
 ### Snap Deployment
 - Local development: `cd snap && yarn build && yarn start` (serves on port 8080)
 - NPM publish: `cd snap && npm publish` (for MetaMask Flask)
+
+### Server Management
+- **IMPORTANT**: Do not spawn multiple dev servers. Manage existing ones.
+- **Standard Ports**:
+  - dApp: **port 3000** (`cd dapp && npm run dev`)
+  - Snap: **port 8080** (`cd snap && yarn start`)
+- Before starting a server, check if it's already running
+- Kill unused servers: `lsof -ti:3000 | xargs kill -9`
+- Demo page route: `http://localhost:3000/#/demo`
 
 ### Project Structure
 ```
