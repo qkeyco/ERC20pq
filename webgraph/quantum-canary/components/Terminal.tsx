@@ -40,7 +40,16 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
     term.loadAddon(fitAddon);
 
     term.open(terminalRef.current);
-    fitAddon.fit();
+
+    // Delay fit() to allow renderer to initialize
+    setTimeout(() => {
+      try {
+        fitAddon.fit();
+      } catch (e) {
+        console.warn('FitAddon: Renderer not ready, retrying...');
+        setTimeout(() => fitAddon.fit(), 100);
+      }
+    }, 0);
 
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
@@ -126,7 +135,11 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
     // Handle resize
     const handleResize = () => {
       if (fitAddonRef.current) {
-        fitAddonRef.current.fit();
+        try {
+          fitAddonRef.current.fit();
+        } catch (e) {
+          // Ignore if renderer not ready
+        }
       }
     };
 
