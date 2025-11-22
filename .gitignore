@@ -1,6 +1,6 @@
 # Foundry
 cache/
-out/
+# out/ - Keeping ABIs for team members
 
 # Broadcast logs (keep structure, ignore local/dry-run)
 !/broadcast

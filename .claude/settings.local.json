@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git submodule add:*)"
+      "Bash(git submodule add:*)",
+      "Bash(forge build:*)",
+      "Bash(~/.foundry/bin/forge build:*)"
     ],
     "deny": [],
     "ask": []
