@@ -211,8 +211,9 @@ contract ERC21PQTokenTest is Test {
         uint256[] memory publicInputs = new uint256[](5);
         bytes memory proof = new bytes(1024);
 
-        vm.expectRevert(ERC21PQToken.ZKGuardNotEnabled.selector);
-        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        // Should return false and emit ZKProofFailed event (no longer reverts)
+        bool success = token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        assertFalse(success, "Should return false when guard not enabled");
     }
 
     function test_TransferZK_RevertIfInvalidNonce() public {
@@ -235,8 +236,13 @@ contract ERC21PQTokenTest is Test {
         bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
-        vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
-        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        // Should return false and emit ZKProofFailed event (no longer reverts)
+        bool success = token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+        assertFalse(success, "Should return false with invalid nonce");
+
+        // Verify no transfer occurred
+        assertEq(token.balanceOf(bob), 0);
+        assertEq(token.zkNonce(alice), 0);
     }
 
     // =============================================================

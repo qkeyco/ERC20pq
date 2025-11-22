@@ -57,6 +57,12 @@ contract ERC21PQToken is OFT {
     /// @notice Emitted when a ZK-verified transfer is executed
     event ZKTransfer(address indexed from, address indexed to, uint256 amount, uint256 nonce);
 
+    /// @notice Emitted when a ZK proof verification fails (for Graph indexing)
+    event ZKProofFailed(address indexed from, address indexed to, uint256 amount, string reason);
+
+    /// @notice Emitted when disabling ZK guard fails
+    event ZKDisableFailed(address indexed account, string reason);
+
     // =============================================================
     //                           ERRORS
     // =============================================================
@@ -160,32 +166,44 @@ contract ERC21PQToken is OFT {
     /// @notice Disable ZK guard (requires STARK proof of ownership)
     /// @param proof The STARK proof proving ownership of HD secret
     /// @param publicInputs Public inputs for verification
+    /// @return success True if guard was disabled
     function disableZKGuard(
         bytes calldata proof,
         uint256[] calldata publicInputs
-    ) external {
+    ) external returns (bool success) {
         if (!zkGuardEnabled[msg.sender]) {
-            revert ZKGuardNotEnabled();
+            emit ZKDisableFailed(msg.sender, "ZK guard not enabled");
+            return false;
         }
 
         // Verify STARK proof to prove ownership
         if (!verifier.verifyProof(proof, publicInputs, programHash)) {
-            revert InvalidProof();
+            emit ZKDisableFailed(msg.sender, "Invalid proof");
+            return false;
         }
 
         // Verify the proof is for this address
-        require(publicInputs.length >= 5, "Invalid public inputs");
-        require(address(uint160(publicInputs[0])) == msg.sender, "Proof not for sender");
+        if (publicInputs.length < 5) {
+            emit ZKDisableFailed(msg.sender, "Invalid public inputs");
+            return false;
+        }
+
+        if (address(uint160(publicInputs[0])) != msg.sender) {
+            emit ZKDisableFailed(msg.sender, "Proof not for sender");
+            return false;
+        }
 
         // Verify commitment matches (reduced to STARK field)
         uint256 proofCommitment = publicInputs[4];
         uint256 expectedCommitment = uint256(hdCommitment[msg.sender]) % STARK_PRIME;
         if (proofCommitment != expectedCommitment) {
-            revert InvalidCommitment();
+            emit ZKDisableFailed(msg.sender, "Invalid commitment");
+            return false;
         }
 
         zkGuardEnabled[msg.sender] = false;
         emit ZKGuardDisabled(msg.sender);
+        return true;
     }
 
     /// @notice Execute a ZK-verified transfer
@@ -204,22 +222,28 @@ contract ERC21PQToken is OFT {
     ) external returns (bool success) {
         // Verify ZK guard is enabled
         if (!zkGuardEnabled[from]) {
-            revert ZKGuardNotEnabled();
+            emit ZKProofFailed(from, to, amount, "ZK guard not enabled");
+            return false;
         }
 
         // Verify balance
         if (balanceOf(from) < amount) {
-            revert InsufficientBalance();
+            emit ZKProofFailed(from, to, amount, "Insufficient balance");
+            return false;
         }
 
         // Verify STARK proof (quantum-resistant)
         if (!verifier.verifyProof(proof, publicInputs, programHash)) {
-            revert InvalidProof();
+            emit ZKProofFailed(from, to, amount, "Invalid proof");
+            return false;
         }
 
         // Extract and verify public inputs
         // Expected order: [from, to, amount, nonce, commitment]
-        require(publicInputs.length >= 5, "Invalid public inputs length");
+        if (publicInputs.length < 5) {
+            emit ZKProofFailed(from, to, amount, "Invalid public inputs length");
+            return false;
+        }
 
         address proofFrom = address(uint160(publicInputs[0]));
         address proofTo = address(uint160(publicInputs[1]));
@@ -228,19 +252,22 @@ contract ERC21PQToken is OFT {
         uint256 proofCommitment = publicInputs[4];
 
         // Verify inputs match
-        require(proofFrom == from, "From mismatch");
-        require(proofTo == to, "To mismatch");
-        require(proofAmount == amount, "Amount mismatch");
+        if (proofFrom != from || proofTo != to || proofAmount != amount) {
+            emit ZKProofFailed(from, to, amount, "Input mismatch");
+            return false;
+        }
 
         // Verify nonce
         if (proofNonce != zkNonce[from]) {
-            revert InvalidNonce();
+            emit ZKProofFailed(from, to, amount, "Invalid nonce");
+            return false;
         }
 
         // Verify commitment (reduced to STARK field)
         uint256 expectedCommitment = uint256(hdCommitment[from]) % STARK_PRIME;
         if (proofCommitment != expectedCommitment) {
-            revert InvalidCommitment();
+            emit ZKProofFailed(from, to, amount, "Invalid commitment");
+            return false;
         }
 
         // Execute transfer in ZK context
