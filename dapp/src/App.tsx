@@ -425,12 +425,27 @@ function App() {
 
               {/* Snap Installation */}
               {!snapInstalled && (
-                <button
-                  onClick={installSnap}
-                  className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition mb-4"
-                >
-                  Install ERC-21 Snap
-                </button>
+                <div className="mb-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                    <p className="text-amber-800 text-sm font-medium">⚠️ Requires MetaMask Flask</p>
+                    <p className="text-amber-700 text-xs mt-1">
+                      This demo uses an unsigned Snap. You need{' '}
+                      <a href="https://metamask.io/flask/" target="_blank" rel="noopener noreferrer" className="underline">
+                        MetaMask Flask
+                      </a>
+                      {' '}(developer version) to run it.
+                    </p>
+                    <p className="text-amber-600 text-xs mt-1">
+                      ⚡ Warning: Flask handles real funds. Use with caution.
+                    </p>
+                  </div>
+                  <button
+                    onClick={installSnap}
+                    className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                  >
+                    Install ERC-21 Snap
+                  </button>
+                </div>
               )}
 
               {/* Action Buttons */}
