@@ -286,6 +286,36 @@ function App() {
     setLoading(false);
   };
 
+  // Simulate Thief - try regular transfer (will fail)
+  const simulateThief = async () => {
+    setLoading(true);
+    setTxStatus('🦹 Thief attempting to steal tokens...');
+    try {
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function transfer(address to, uint256 amount) returns (bool)',
+      ], signer);
+
+      // Try regular transfer - this will fail if ZK guard is enabled
+      // Force send with manual gas limit to bypass estimation and show MetaMask confirmation
+      const tx = await contract.transfer(MERCHANT_ADDRESS, ethers.parseEther('100'), {
+        gasLimit: 100000,
+      });
+      await tx.wait();
+
+      setTxStatus('❌ Security breach! Tokens stolen!');
+    } catch (error: any) {
+      if (error.message.includes('ZKGuardEnabled') || error.message.includes('reverted')) {
+        setTxStatus('✅ Theft BLOCKED! ZK Guard protected your tokens. Attacker needs your HD secret.');
+      } else {
+        setTxStatus(`✅ Theft blocked: ${error.message.slice(0, 50)}...`);
+      }
+    }
+    setLoading(false);
+  };
+
   // Pay Pizza
   const payPizza = async () => {
     setLoading(true);
@@ -474,6 +504,17 @@ function App() {
                 >
                   {loading ? 'Processing...' : '🍕 Pay Pizza (10 USDPQ)'}
                 </button>
+
+                {/* Simulate Thief - demo security */}
+                {accountInfo && accountInfo.isGuarded && (
+                  <button
+                    onClick={simulateThief}
+                    disabled={loading}
+                    className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Attempting...' : '🦹 Simulate Thief (Try to Steal)'}
+                  </button>
+                )}
               </div>
 
               {/* Transaction Status */}
