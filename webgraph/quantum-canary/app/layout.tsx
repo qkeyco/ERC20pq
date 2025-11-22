@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '../styles/globals.css';
+import '@xterm/xterm/css/xterm.css';
 
 export const metadata: Metadata = {
   title: 'Quantum Canary - ERC-21 Monitoring Dashboard',

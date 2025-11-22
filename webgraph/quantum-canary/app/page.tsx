@@ -1,9 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Terminal from '@/components/Terminal';
+import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar';
 import { CommandResult } from '@/lib/commands';
+
+// Load Terminal only on client side (Xterm requires browser APIs)
+const Terminal = dynamic(() => import('@/components/Terminal'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full text-terminal-green font-vt323 text-xl">
+      Loading terminal...
+    </div>
+  ),
+});
 
 export default function Home() {
   const [commandResult, setCommandResult] = useState<CommandResult | null>(null);
