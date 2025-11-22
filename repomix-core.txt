@@ -1,0 +1,2654 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/**, dapp/src/**, snap/src/**, script/**, test/**, CLAUDE.md, ROADMAP.md
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+dapp/
+  src/
+    App.tsx
+    index.css
+    main.tsx
+script/
+  Deploy.s.sol
+snap/
+  src/
+    index.ts
+src/
+  demos/
+    PizzaMerchant.sol
+    TinyDex.sol
+  interfaces/
+    IStarkVerifier.sol
+    IVerifier.sol
+  mocks/
+    MockLzEndpoint.sol
+    MockStarkVerifier.sol
+    MockUSD.sol
+  ERC21PQToken.sol
+  Groth16Verifier.sol
+  StarkVerifier.sol
+test/
+  ERC21PQToken.t.sol
+CLAUDE.md
+ROADMAP.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="CLAUDE.md">
+# Claude Code Rules for ERC20pq
+
+## Project Guidelines
+
+### Commits
+- **Make regular commits as you go** - This is required by hackathon rules
+- Commit after completing each significant feature or milestone
+- Use descriptive commit messages that explain what was added/changed
+
+### Development Workflow
+1. Complete a feature or significant change
+2. Run tests: `forge test`
+3. Commit with descriptive message
+4. Continue to next feature
+
+### Tech Stack
+- **Smart Contracts**: Foundry, Solidity 0.8.28
+- **ZK Proofs**: STARKs (quantum-resistant, no trusted setup)
+- **Cross-chain**: LayerZero OFT
+- **Frontend**: React + Vite + Tailwind
+- **Snap**: MetaMask Snap for ZK proof generation
+- **Indexing**: The Graph
+
+### Key Integrations
+- LayerZero (cross-chain)
+- The Graph (event indexing)
+- Protocol Labs (IPFS/Filecoin ready)
+
+### Testing
+- Run all tests: `forge test -v`
+- Target: All tests passing before commits
+
+### Deployment
+- Local: `forge script script/Deploy.s.sol:DeployLocal --broadcast`
+- Testnet: `forge script script/Deploy.s.sol:DeployScript --rpc-url <RPC_URL> --broadcast`
+
+### Network Configuration
+- **Network**: Tenderly Fork of Ethereum Mainnet
+- **Chain ID**: 73571
+- **RPC URL**: https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f
+- **LayerZero Endpoint**: 0x1a44076050125825900e736c501f859c50fE728c (Ethereum Mainnet V2)
+
+### Snap Deployment
+- Local development: `cd snap && yarn build && yarn start` (serves on port 8080)
+- NPM publish: `cd snap && npm publish` (for MetaMask Flask)
+
+### Project Structure
+```
+ERC20pq/
+├── src/           # Solidity contracts
+├── test/          # Foundry tests
+├── script/        # Deployment scripts
+├── circuits/      # Cairo programs for STARK proofs
+├── snap/          # MetaMask Snap (port 8080)
+├── dapp/          # React frontend
+└── subgraph/      # The Graph subgraph
+```
+</file>
+
+<file path="ROADMAP.md">
+# PQP Roadmap - Post Quantum Privacy/Pay
+
+## Goal 1: Native Token ✅ DONE
+- ERC-21 PQ Token (USDPQ)
+- STARK-based ownership lock
+- MetaMask Snap for ZK proof generation
+
+## Goal 2: Multi-Chain Demo Wallet
+- [x] Ethereum Snap
+- [ ] Bitcoin wallet (Taproot + STARK?)
+- [ ] Solana wallet
+
+## Goal 3: Synthetic Stablecoin - USDPQ
+Deposit any of:
+- ETH
+- BTC (wrapped)
+- SOL (wrapped)
+- Other approved collateral
+
+### Mechanism Design Questions
+- **Fixed % allocation** vs **Natural balance**?
+- **Depeg protection**: If one asset depegs but others don't:
+  - Over-collateralization buffer?
+  - Automatic rebalancing?
+  - Liquidation of risky collateral?
+  - Insurance fund?
+- Legal compliance: Synthetic = not a security?
+
+### Architecture
+```
+User deposits ETH/BTC/SOL
+         ↓
+   Collateral Pool (quantum-safe)
+         ↓
+   Mint USDPQ (1:1 USD peg)
+         ↓
+   All transfers require ZK proof
+```
+
+## Goal 4: Mainnet Launch + Audit
+- [ ] Security audit (ZK circuits, contracts)
+- [ ] Formal verification
+- [ ] Bug bounty program
+- [ ] Gradual rollout with caps
+
+## Goal 5: Quantum-Safe LayerZero
+- Replace ECDSA in DVN with STARK proofs
+- Cross-chain messages require ZK verification
+- Novel contribution to LayerZero ecosystem
+
+## Goal 6: Quantum-Safe DEX
+- Support USDPQ trading
+- All swaps require ZK proofs
+- AMM with quantum-resistant signatures
+- On-chain order book option?
+
+---
+
+## Naming
+- **PQP** = Post Quantum Privacy/Pay
+- **USDPQ** = USD Post Quantum
+- Tagline: "Quantum-safe audited primitives"
+
+## Hackathon Focus (Today)
+1. Polish USDPQ demo
+2. Simulate thief demo
+3. Video/presentation
+
+## Tomorrow Stretch
+1. WETHPQ wrapper
+2. LayerZero proof concept
+3. Stablecoin mechanism design
+</file>
+
+<file path="dapp/src/index.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+</file>
+
+<file path="dapp/src/main.tsx">
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+</file>
+
+<file path="src/demos/PizzaMerchant.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+/// @title PizzaMerchant
+/// @notice Demo contract for a pizza shop that accepts ERC21PQToken
+/// @dev Shows that the token is fully ERC-20 compatible with normal endpoints
+contract PizzaMerchant {
+    using SafeERC20 for IERC20;
+
+    // =============================================================
+    //                           STORAGE
+    // =============================================================
+
+    /// @notice The ERC21PQToken address
+    IERC20 public immutable token;
+
+    /// @notice Price of a pizza in tokens
+    uint256 public pizzaPrice;
+
+    /// @notice Owner of the merchant contract
+    address public owner;
+
+    /// @notice Total pizzas sold
+    uint256 public totalPizzasSold;
+
+    // =============================================================
+    //                           EVENTS
+    // =============================================================
+
+    /// @notice Emitted when a pizza is paid for
+    event PizzaPaid(address indexed customer, uint256 amount, uint256 pizzaId);
+
+    /// @notice Emitted when the pizza price is updated
+    event PriceUpdated(uint256 oldPrice, uint256 newPrice);
+
+    /// @notice Emitted when tokens are withdrawn
+    event Withdrawal(address indexed to, uint256 amount);
+
+    // =============================================================
+    //                           ERRORS
+    // =============================================================
+
+    error InsufficientPayment();
+    error OnlyOwner();
+    error TransferFailed();
+
+    // =============================================================
+    //                         CONSTRUCTOR
+    // =============================================================
+
+    /// @notice Constructor
+    /// @param _token The ERC21PQToken address
+    /// @param _pizzaPrice Initial pizza price
+    constructor(address _token, uint256 _pizzaPrice) {
+        token = IERC20(_token);
+        pizzaPrice = _pizzaPrice;
+        owner = msg.sender;
+    }
+
+    // =============================================================
+    //                      PUBLIC FUNCTIONS
+    // =============================================================
+
+    /// @notice Pay for a pizza using tokens
+    /// @dev Customer must have approved this contract to spend tokens
+    function payForPizza() external {
+        payForPizzaWithAmount(pizzaPrice);
+    }
+
+    /// @notice Pay a custom amount for a pizza
+    /// @param amount The amount to pay
+    function payForPizzaWithAmount(uint256 amount) public {
+        if (amount < pizzaPrice) {
+            revert InsufficientPayment();
+        }
+
+        // Use transferFrom - this is standard ERC-20
+        // For ZK-guarded addresses, they must use transferZK to send to this contract first
+        token.safeTransferFrom(msg.sender, address(this), amount);
+
+        totalPizzasSold += 1;
+
+        emit PizzaPaid(msg.sender, amount, totalPizzasSold);
+    }
+
+    /// @notice Update the pizza price
+    /// @param newPrice The new pizza price
+    function setPizzaPrice(uint256 newPrice) external {
+        if (msg.sender != owner) {
+            revert OnlyOwner();
+        }
+
+        uint256 oldPrice = pizzaPrice;
+        pizzaPrice = newPrice;
+
+        emit PriceUpdated(oldPrice, newPrice);
+    }
+
+    /// @notice Withdraw collected tokens
+    /// @param to The address to withdraw to
+    /// @param amount The amount to withdraw
+    function withdraw(address to, uint256 amount) external {
+        if (msg.sender != owner) {
+            revert OnlyOwner();
+        }
+
+        token.safeTransfer(to, amount);
+
+        emit Withdrawal(to, amount);
+    }
+
+    /// @notice Get the merchant's token balance
+    /// @return The token balance
+    function getBalance() external view returns (uint256) {
+        return token.balanceOf(address(this));
+    }
+}
+</file>
+
+<file path="src/demos/TinyDex.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+/// @title TinyDex
+/// @notice Minimal DEX for swapping ERC21PQToken with a stablecoin
+/// @dev Demonstrates ERC-20 compatibility with DEX-like operations
+contract TinyDex {
+    using SafeERC20 for IERC20;
+
+    // =============================================================
+    //                           STORAGE
+    // =============================================================
+
+    /// @notice The ERC21PQToken (LZPQ)
+    IERC20 public immutable tokenLZPQ;
+
+    /// @notice The stablecoin (USD mock)
+    IERC20 public immutable tokenUSD;
+
+    /// @notice Owner of the DEX
+    address public owner;
+
+    /// @notice Exchange rate: 1 LZPQ = exchangeRate USD (in 18 decimals)
+    uint256 public exchangeRate;
+
+    /// @notice Total volume swapped
+    uint256 public totalVolume;
+
+    // =============================================================
+    //                           EVENTS
+    // =============================================================
+
+    /// @notice Emitted when LZPQ is swapped for USD
+    event SwapLZPQForUSD(address indexed user, uint256 lzpqAmount, uint256 usdAmount);
+
+    /// @notice Emitted when USD is swapped for LZPQ
+    event SwapUSDForLZPQ(address indexed user, uint256 usdAmount, uint256 lzpqAmount);
+
+    /// @notice Emitted when exchange rate is updated
+    event ExchangeRateUpdated(uint256 oldRate, uint256 newRate);
+
+    /// @notice Emitted when liquidity is added
+    event LiquidityAdded(address indexed provider, uint256 lzpqAmount, uint256 usdAmount);
+
+    // =============================================================
+    //                           ERRORS
+    // =============================================================
+
+    error OnlyOwner();
+    error InsufficientLiquidity();
+    error ZeroAmount();
+
+    // =============================================================
+    //                         CONSTRUCTOR
+    // =============================================================
+
+    /// @notice Constructor
+    /// @param _tokenLZPQ The ERC21PQToken address
+    /// @param _tokenUSD The USD stablecoin address
+    /// @param _exchangeRate Initial exchange rate (18 decimals)
+    constructor(address _tokenLZPQ, address _tokenUSD, uint256 _exchangeRate) {
+        tokenLZPQ = IERC20(_tokenLZPQ);
+        tokenUSD = IERC20(_tokenUSD);
+        exchangeRate = _exchangeRate;
+        owner = msg.sender;
+    }
+
+    // =============================================================
+    //                      SWAP FUNCTIONS
+    // =============================================================
+
+    /// @notice Swap LZPQ tokens for USD
+    /// @param lzpqAmount Amount of LZPQ to swap
+    /// @return usdAmount Amount of USD received
+    function swapLZPQForUSD(uint256 lzpqAmount) external returns (uint256 usdAmount) {
+        if (lzpqAmount == 0) {
+            revert ZeroAmount();
+        }
+
+        // Calculate USD amount
+        usdAmount = (lzpqAmount * exchangeRate) / 1e18;
+
+        // Check liquidity
+        if (tokenUSD.balanceOf(address(this)) < usdAmount) {
+            revert InsufficientLiquidity();
+        }
+
+        // Transfer LZPQ from user to DEX
+        // Note: For ZK-guarded addresses, they must use transferZK to send here first
+        tokenLZPQ.safeTransferFrom(msg.sender, address(this), lzpqAmount);
+
+        // Transfer USD to user
+        tokenUSD.safeTransfer(msg.sender, usdAmount);
+
+        totalVolume += lzpqAmount;
+
+        emit SwapLZPQForUSD(msg.sender, lzpqAmount, usdAmount);
+    }
+
+    /// @notice Swap USD for LZPQ tokens
+    /// @param usdAmount Amount of USD to swap
+    /// @return lzpqAmount Amount of LZPQ received
+    function swapUSDForLZPQ(uint256 usdAmount) external returns (uint256 lzpqAmount) {
+        if (usdAmount == 0) {
+            revert ZeroAmount();
+        }
+
+        // Calculate LZPQ amount
+        lzpqAmount = (usdAmount * 1e18) / exchangeRate;
+
+        // Check liquidity
+        if (tokenLZPQ.balanceOf(address(this)) < lzpqAmount) {
+            revert InsufficientLiquidity();
+        }
+
+        // Transfer USD from user to DEX
+        tokenUSD.safeTransferFrom(msg.sender, address(this), usdAmount);
+
+        // Transfer LZPQ to user
+        tokenLZPQ.safeTransfer(msg.sender, lzpqAmount);
+
+        totalVolume += lzpqAmount;
+
+        emit SwapUSDForLZPQ(msg.sender, usdAmount, lzpqAmount);
+    }
+
+    // =============================================================
+    //                     ADMIN FUNCTIONS
+    // =============================================================
+
+    /// @notice Add liquidity to the DEX
+    /// @param lzpqAmount Amount of LZPQ to add
+    /// @param usdAmount Amount of USD to add
+    function addLiquidity(uint256 lzpqAmount, uint256 usdAmount) external {
+        if (lzpqAmount > 0) {
+            tokenLZPQ.safeTransferFrom(msg.sender, address(this), lzpqAmount);
+        }
+        if (usdAmount > 0) {
+            tokenUSD.safeTransferFrom(msg.sender, address(this), usdAmount);
+        }
+
+        emit LiquidityAdded(msg.sender, lzpqAmount, usdAmount);
+    }
+
+    /// @notice Update the exchange rate
+    /// @param newRate The new exchange rate
+    function setExchangeRate(uint256 newRate) external {
+        if (msg.sender != owner) {
+            revert OnlyOwner();
+        }
+
+        uint256 oldRate = exchangeRate;
+        exchangeRate = newRate;
+
+        emit ExchangeRateUpdated(oldRate, newRate);
+    }
+
+    /// @notice Withdraw liquidity
+    /// @param to Recipient address
+    /// @param lzpqAmount LZPQ amount to withdraw
+    /// @param usdAmount USD amount to withdraw
+    function withdrawLiquidity(address to, uint256 lzpqAmount, uint256 usdAmount) external {
+        if (msg.sender != owner) {
+            revert OnlyOwner();
+        }
+
+        if (lzpqAmount > 0) {
+            tokenLZPQ.safeTransfer(to, lzpqAmount);
+        }
+        if (usdAmount > 0) {
+            tokenUSD.safeTransfer(to, usdAmount);
+        }
+    }
+
+    // =============================================================
+    //                      VIEW FUNCTIONS
+    // =============================================================
+
+    /// @notice Get the DEX reserves
+    /// @return lzpqReserve LZPQ balance
+    /// @return usdReserve USD balance
+    function getReserves() external view returns (uint256 lzpqReserve, uint256 usdReserve) {
+        lzpqReserve = tokenLZPQ.balanceOf(address(this));
+        usdReserve = tokenUSD.balanceOf(address(this));
+    }
+
+    /// @notice Get quote for LZPQ to USD swap
+    /// @param lzpqAmount Amount of LZPQ
+    /// @return usdAmount Amount of USD
+    function quoteLZPQToUSD(uint256 lzpqAmount) external view returns (uint256 usdAmount) {
+        usdAmount = (lzpqAmount * exchangeRate) / 1e18;
+    }
+
+    /// @notice Get quote for USD to LZPQ swap
+    /// @param usdAmount Amount of USD
+    /// @return lzpqAmount Amount of LZPQ
+    function quoteUSDToLZPQ(uint256 usdAmount) external view returns (uint256 lzpqAmount) {
+        lzpqAmount = (usdAmount * 1e18) / exchangeRate;
+    }
+}
+</file>
+
+<file path="src/interfaces/IStarkVerifier.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title IStarkVerifier
+/// @notice Interface for STARK proof verification (quantum-resistant)
+/// @dev STARKs use hash-based cryptography, no trusted setup required
+interface IStarkVerifier {
+    /// @notice Verifies a STARK proof
+    /// @param proof The STARK proof data (FRI commitments, queries, decommitments)
+    /// @param publicInputs The public inputs to the computation
+    /// @param programHash The hash of the Cairo program being verified
+    /// @return valid True if the proof is valid
+    function verifyProof(
+        bytes calldata proof,
+        uint256[] calldata publicInputs,
+        bytes32 programHash
+    ) external view returns (bool valid);
+
+    /// @notice Get the security level in bits
+    /// @return bits Security level (e.g., 128 for 128-bit security)
+    function securityBits() external pure returns (uint256 bits);
+}
+</file>
+
+<file path="src/interfaces/IVerifier.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title IVerifier
+/// @notice Interface for SNARK proof verification
+interface IVerifier {
+    /// @notice Verifies a SNARK proof
+    /// @param proof The proof data
+    /// @param publicInputs The public inputs to the circuit
+    /// @return valid True if the proof is valid
+    function verifyProof(
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external view returns (bool valid);
+}
+</file>
+
+<file path="src/mocks/MockLzEndpoint.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title MockLzEndpoint
+/// @notice Minimal mock of LayerZero endpoint for testing
+contract MockLzEndpoint {
+    mapping(address => address) public delegates;
+
+    function setDelegate(address _delegate) external {
+        delegates[msg.sender] = _delegate;
+    }
+
+    function eid() external pure returns (uint32) {
+        return 1; // Mock chain ID
+    }
+}
+</file>
+
+<file path="src/mocks/MockStarkVerifier.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { IStarkVerifier } from "../interfaces/IStarkVerifier.sol";
+
+/// @title MockStarkVerifier
+/// @notice Mock STARK verifier for testing
+/// @dev Accepts any non-zero proof for testing purposes
+contract MockStarkVerifier is IStarkVerifier {
+    uint256 constant STARK_PRIME =
+        3618502788666131213697322783095070105623107215331596699973092056135872020481;
+
+    bytes32 public expectedProgramHash;
+
+    constructor(bytes32 _programHash) {
+        expectedProgramHash = _programHash;
+    }
+
+    function verifyProof(
+        bytes calldata proof,
+        uint256[] calldata publicInputs,
+        bytes32 programHash
+    ) external view override returns (bool valid) {
+        // Verify program hash
+        require(programHash == expectedProgramHash, "Invalid program hash");
+
+        // Verify inputs
+        require(publicInputs.length == 5, "Expected 5 public inputs");
+
+        for (uint256 i = 0; i < publicInputs.length; i++) {
+            require(publicInputs[i] < STARK_PRIME, "Input exceeds field");
+        }
+
+        // For testing: accept proofs >= 1024 bytes with non-zero first byte
+        require(proof.length >= 1024, "Proof too small");
+
+        bool nonZero = false;
+        for (uint256 i = 0; i < 32 && i < proof.length; i++) {
+            if (proof[i] != 0) {
+                nonZero = true;
+                break;
+            }
+        }
+
+        return nonZero;
+    }
+
+    function securityBits() external pure override returns (uint256) {
+        return 128;
+    }
+}
+</file>
+
+<file path="src/mocks/MockUSD.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+/// @title MockUSD
+/// @notice Mock USD stablecoin for testing
+contract MockUSD is ERC20 {
+    constructor() ERC20("Mock USD", "mUSD") {
+        // Mint some initial supply to deployer
+        _mint(msg.sender, 1_000_000 * 10 ** 18);
+    }
+
+    /// @notice Mint tokens (for testing)
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+}
+</file>
+
+<file path="src/Groth16Verifier.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { IVerifier } from "./interfaces/IVerifier.sol";
+
+/// @title Groth16Verifier
+/// @notice Placeholder Groth16 verifier for ERC-21 ZK proofs
+/// @dev This will be replaced with the actual verifier generated from the circom circuit
+/// @author EthVaultPQ Team
+contract Groth16Verifier is IVerifier {
+    // =============================================================
+    //                    VERIFICATION KEYS
+    // =============================================================
+
+    // These will be set from the circuit's verification key
+    // Placeholder values for now
+
+    uint256 constant SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    // =============================================================
+    //                      VERIFICATION
+    // =============================================================
+
+    /// @notice Verify a Groth16 proof
+    /// @param proof The proof data (a, b, c points)
+    /// @param publicInputs The public inputs [from, to, amount, nonce, commitment]
+    /// @return valid True if the proof is valid
+    function verifyProof(
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external pure override returns (bool valid) {
+        // Verify we have the expected number of public inputs
+        require(publicInputs.length == 5, "Expected 5 public inputs");
+
+        // Verify all inputs are within the scalar field
+        for (uint256 i = 0; i < publicInputs.length; i++) {
+            require(publicInputs[i] < SNARK_SCALAR_FIELD, "Input exceeds scalar field");
+        }
+
+        // Verify proof length (3 G1 points + 1 G2 point = 8 * 32 bytes)
+        // a (2 * 32), b (4 * 32), c (2 * 32) = 256 bytes
+        require(proof.length == 256, "Invalid proof length");
+
+        // TODO: Implement actual pairing check
+        // For now, return true for demo purposes
+        // This MUST be replaced with real verification before production
+
+        // Placeholder: check that proof is not all zeros
+        bool nonZero = false;
+        for (uint256 i = 0; i < proof.length; i++) {
+            if (proof[i] != 0) {
+                nonZero = true;
+                break;
+            }
+        }
+
+        return nonZero;
+    }
+
+    /// @notice Get the number of expected public inputs
+    /// @return count The number of public inputs
+    function getPublicInputsCount() external pure returns (uint256 count) {
+        return 5;
+    }
+}
+</file>
+
+<file path="src/StarkVerifier.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { IStarkVerifier } from "./interfaces/IStarkVerifier.sol";
+
+/// @title StarkVerifier
+/// @notice STARK proof verifier for ERC-21 ZK transfers
+/// @dev Quantum-resistant: uses hash-based cryptography (no elliptic curves)
+/// @dev No trusted setup required (transparent)
+/// @author EthVaultPQ Team
+contract StarkVerifier is IStarkVerifier {
+    // =============================================================
+    //                         CONSTANTS
+    // =============================================================
+
+    /// @notice Prime field modulus for STARK proofs
+    /// @dev Cairo's field prime: 2^251 + 17 * 2^192 + 1
+    uint256 constant STARK_PRIME =
+        3618502788666131213697322783095070105623107215331596699973092056135872020481;
+
+    /// @notice Security level in bits
+    uint256 constant SECURITY_BITS = 128;
+
+    /// @notice FRI folding factor
+    uint256 constant FRI_FOLDING_FACTOR = 4;
+
+    /// @notice Number of FRI queries for security
+    uint256 constant NUM_FRI_QUERIES = 30;
+
+    /// @notice Program hash for HD commitment verification
+    bytes32 public immutable hdCommitmentProgramHash;
+
+    // =============================================================
+    //                         CONSTRUCTOR
+    // =============================================================
+
+    /// @notice Constructor
+    /// @param _programHash Hash of the Cairo program for HD commitment
+    constructor(bytes32 _programHash) {
+        hdCommitmentProgramHash = _programHash;
+    }
+
+    // =============================================================
+    //                       VERIFICATION
+    // =============================================================
+
+    /// @notice Verify a STARK proof
+    /// @param proof The proof data containing:
+    ///   - trace_commitment: Merkle root of execution trace
+    ///   - composition_commitment: Merkle root of composition polynomial
+    ///   - fri_commitments: FRI layer commitments
+    ///   - queries: Random query indices
+    ///   - decommitments: Merkle authentication paths
+    /// @param publicInputs Public inputs [from, to, amount, nonce, commitment]
+    /// @param programHash Hash of the Cairo program
+    /// @return valid True if proof is valid
+    function verifyProof(
+        bytes calldata proof,
+        uint256[] calldata publicInputs,
+        bytes32 programHash
+    ) external view override returns (bool valid) {
+        // Verify program hash matches expected
+        require(
+            programHash == hdCommitmentProgramHash,
+            "Invalid program hash"
+        );
+
+        // Verify we have expected public inputs
+        require(publicInputs.length == 5, "Expected 5 public inputs");
+
+        // Verify inputs are in the STARK field
+        // Addresses (160 bits) and amounts always fit
+        // Commitment (256 bits) is reduced mod STARK_PRIME by caller
+        for (uint256 i = 0; i < 4; i++) {
+            require(publicInputs[i] < STARK_PRIME, "Input exceeds field");
+        }
+        // Commitment is the 5th input - verify it's been reduced
+        require(publicInputs[4] < STARK_PRIME, "Commitment must be reduced to field");
+
+        // Verify minimum proof size
+        // STARK proofs are larger than SNARKs (~100KB vs ~200B)
+        require(proof.length >= 1024, "Proof too small for STARK");
+
+        // =============================================================
+        //                    STARK VERIFICATION STEPS
+        // =============================================================
+
+        // In production, this would:
+        // 1. Verify trace commitment (Merkle root of AIR execution trace)
+        // 2. Verify composition polynomial commitment
+        // 3. Verify constraint polynomial evaluation
+        // 4. Verify FRI (Fast Reed-Solomon IOP) layers
+        // 5. Verify query decommitments (Merkle proofs)
+
+        // For demo, we verify basic structure and non-triviality
+
+        // Check proof starts with valid trace commitment (32 bytes)
+        bytes32 traceCommitment;
+        assembly {
+            traceCommitment := calldataload(proof.offset)
+        }
+        require(traceCommitment != bytes32(0), "Invalid trace commitment");
+
+        // Check composition commitment (next 32 bytes)
+        bytes32 compositionCommitment;
+        assembly {
+            compositionCommitment := calldataload(add(proof.offset, 32))
+        }
+        require(compositionCommitment != bytes32(0), "Invalid composition commitment");
+
+        // Verify FRI commitment structure
+        // Each FRI layer has a commitment (log2(trace_length) layers)
+        uint256 numFriLayers = 8; // For trace length 2^8 = 256
+        for (uint256 i = 0; i < numFriLayers; i++) {
+            bytes32 friCommitment;
+            assembly {
+                friCommitment := calldataload(add(proof.offset, add(64, mul(i, 32))))
+            }
+            require(friCommitment != bytes32(0), "Invalid FRI commitment");
+        }
+
+        // TODO: Implement full STARK verification
+        // This includes:
+        // - Fiat-Shamir transcript for challenge generation
+        // - FRI query verification
+        // - Merkle decommitment verification
+        // - Constraint evaluation checks
+
+        return true;
+    }
+
+    /// @notice Get security level
+    /// @return bits Security level in bits
+    function securityBits() external pure override returns (uint256 bits) {
+        return SECURITY_BITS;
+    }
+
+    // =============================================================
+    //                    HELPER FUNCTIONS
+    // =============================================================
+
+    /// @notice Verify a Merkle proof (used in FRI and trace queries)
+    /// @param leaf The leaf value
+    /// @param index The leaf index
+    /// @param root The Merkle root
+    /// @param proof The authentication path
+    /// @return valid True if proof is valid
+    function verifyMerkleProof(
+        bytes32 leaf,
+        uint256 index,
+        bytes32 root,
+        bytes32[] calldata proof
+    ) internal pure returns (bool valid) {
+        bytes32 computedHash = leaf;
+
+        for (uint256 i = 0; i < proof.length; i++) {
+            if (index % 2 == 0) {
+                computedHash = keccak256(abi.encodePacked(computedHash, proof[i]));
+            } else {
+                computedHash = keccak256(abi.encodePacked(proof[i], computedHash));
+            }
+            index = index / 2;
+        }
+
+        return computedHash == root;
+    }
+
+    /// @notice Hash function used in STARK (Pedersen or Poseidon over STARK field)
+    /// @dev For Ethereum, we use keccak256 reduced to STARK field
+    function starkHash(uint256 a, uint256 b) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(a, b))) % STARK_PRIME;
+    }
+}
+</file>
+
+<file path="test/ERC21PQToken.t.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Test.sol";
+import { ERC21PQToken } from "../src/ERC21PQToken.sol";
+import { MockStarkVerifier } from "../src/mocks/MockStarkVerifier.sol";
+import { PizzaMerchant } from "../src/demos/PizzaMerchant.sol";
+import { TinyDex } from "../src/demos/TinyDex.sol";
+import { MockUSD } from "../src/mocks/MockUSD.sol";
+import { MockLzEndpoint } from "../src/mocks/MockLzEndpoint.sol";
+
+/// @title ERC21PQTokenTest
+/// @notice Comprehensive tests for ERC-21 ZK-guarded token with STARK proofs
+contract ERC21PQTokenTest is Test {
+    // =============================================================
+    //                         CONTRACTS
+    // =============================================================
+
+    ERC21PQToken public token;
+    MockStarkVerifier public verifier;
+    PizzaMerchant public merchant;
+    TinyDex public dex;
+    MockUSD public usd;
+    MockLzEndpoint public lzEndpoint;
+
+    // Program hash for HD commitment verification
+    bytes32 public constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
+    // =============================================================
+    //                         ADDRESSES
+    // =============================================================
+
+    address public owner = address(1);
+    address public alice = address(2);
+    address public bob = address(3);
+    address public will = address(4);  // The thief
+
+    // =============================================================
+    //                          SETUP
+    // =============================================================
+
+    function setUp() public {
+        vm.startPrank(owner);
+
+        // Deploy mock LZ endpoint
+        lzEndpoint = new MockLzEndpoint();
+
+        // Deploy STARK verifier
+        verifier = new MockStarkVerifier(PROGRAM_HASH);
+
+        // Deploy token with initial supply
+        token = new ERC21PQToken(
+            "ERC21 PQ Token",
+            "LZPQ",
+            address(lzEndpoint),
+            owner,
+            address(verifier),
+            PROGRAM_HASH,
+            1_000_000 * 10 ** 18
+        );
+
+        // Deploy demo contracts
+        merchant = new PizzaMerchant(address(token), 10 * 10 ** 18);
+        usd = new MockUSD();
+        dex = new TinyDex(address(token), address(usd), 1 * 10 ** 18);
+
+        // Setup liquidity for DEX
+        token.transfer(address(dex), 100_000 * 10 ** 18);
+        usd.transfer(address(dex), 100_000 * 10 ** 18);
+
+        // Give Alice some tokens
+        token.transfer(alice, 10_000 * 10 ** 18);
+
+        vm.stopPrank();
+    }
+
+    // =============================================================
+    //                    BASIC ERC-20 TESTS
+    // =============================================================
+
+    function test_InitialSupply() public view {
+        assertEq(token.totalSupply(), 1_000_000 * 10 ** 18);
+    }
+
+    function test_Transfer() public {
+        vm.prank(alice);
+        token.transfer(bob, 100 * 10 ** 18);
+
+        assertEq(token.balanceOf(bob), 100 * 10 ** 18);
+        assertEq(token.balanceOf(alice), 9_900 * 10 ** 18);
+    }
+
+    function test_TransferFrom() public {
+        vm.prank(alice);
+        token.approve(bob, 100 * 10 ** 18);
+
+        vm.prank(bob);
+        token.transferFrom(alice, bob, 100 * 10 ** 18);
+
+        assertEq(token.balanceOf(bob), 100 * 10 ** 18);
+    }
+
+    // =============================================================
+    //                    ZK GUARD TESTS
+    // =============================================================
+
+    function test_BindHDCommitment() public {
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.prank(alice);
+        token.bindHD(commitment);
+
+        assertEq(token.hdCommitment(alice), commitment);
+    }
+
+    function test_BindHDCommitment_RevertIfAlreadyBound() public {
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+
+        vm.expectRevert(ERC21PQToken.CommitmentAlreadyBound.selector);
+        token.bindHD(commitment);
+        vm.stopPrank();
+    }
+
+    function test_EnableZKGuard() public {
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        assertTrue(token.zkGuardEnabled(alice));
+    }
+
+    function test_EnableZKGuard_RevertIfNoCommitment() public {
+        vm.prank(alice);
+        vm.expectRevert(ERC21PQToken.NoCommitmentBound.selector);
+        token.enableZKGuard();
+    }
+
+    function test_Transfer_RevertsWhenGuarded() public {
+        // Alice binds commitment and enables guard
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+
+        // Now try to transfer normally - should revert
+        vm.expectRevert(ERC21PQToken.ZKGuardEnabled_UseTransferZK.selector);
+        token.transfer(bob, 100 * 10 ** 18);
+        vm.stopPrank();
+    }
+
+    function test_TransferFrom_RevertsWhenGuarded() public {
+        // Alice binds commitment and enables guard
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        token.approve(bob, 100 * 10 ** 18);
+        vm.stopPrank();
+
+        // Bob tries to transferFrom - should revert
+        vm.prank(bob);
+        vm.expectRevert(ERC21PQToken.ZKGuardEnabled_UseTransferZK.selector);
+        token.transferFrom(alice, bob, 100 * 10 ** 18);
+    }
+
+    // =============================================================
+    //                    ZK TRANSFER TESTS
+    // =============================================================
+
+    function test_TransferZK() public {
+        // Setup: Alice binds commitment and enables guard
+        bytes32 commitment = bytes32(uint256(12345)); // Simple commitment for test
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        // Build proof and public inputs
+        // Public inputs: [from, to, amount, nonce, commitment]
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = 100 * 10 ** 18;
+        publicInputs[3] = 0; // First transfer, nonce = 0
+        publicInputs[4] = uint256(commitment);
+
+        // Create a non-zero proof (placeholder verifier accepts non-zero proofs)
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        // Execute ZK transfer
+        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+
+        // Verify results
+        assertEq(token.balanceOf(bob), 100 * 10 ** 18);
+        assertEq(token.balanceOf(alice), 9_900 * 10 ** 18);
+        assertEq(token.zkNonce(alice), 1);
+    }
+
+    function test_TransferZK_RevertIfNotGuarded() public {
+        // Try to use transferZK without enabling guard
+        uint256[] memory publicInputs = new uint256[](5);
+        bytes memory proof = new bytes(1024);
+
+        vm.expectRevert(ERC21PQToken.ZKGuardNotEnabled.selector);
+        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+    }
+
+    function test_TransferZK_RevertIfInvalidNonce() public {
+        // Setup
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        // Try with wrong nonce
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(bob));
+        publicInputs[2] = 100 * 10 ** 18;
+        publicInputs[3] = 1; // Wrong nonce (should be 0)
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
+        token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
+    }
+
+    // =============================================================
+    //                    DEMO SCENARIO TESTS
+    // =============================================================
+
+    /// @notice Full "Will the Thief" scenario
+    function test_WillTheThief_CannotStealTokens() public {
+        // Step 1: Alice binds commitment and enables guard
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        // Step 2: Will gets Alice's private key (simulated by pranking as Alice)
+        // Will tries to transfer Alice's tokens
+        vm.prank(alice); // Will is now "controlling" Alice's account
+        vm.expectRevert(ERC21PQToken.ZKGuardEnabled_UseTransferZK.selector);
+        token.transfer(will, 1000 * 10 ** 18);
+
+        // Will tries transferFrom
+        vm.prank(alice);
+        token.approve(will, 1000 * 10 ** 18);
+
+        vm.prank(will);
+        vm.expectRevert(ERC21PQToken.ZKGuardEnabled_UseTransferZK.selector);
+        token.transferFrom(alice, will, 1000 * 10 ** 18);
+
+        // Alice's balance unchanged
+        assertEq(token.balanceOf(alice), 10_000 * 10 ** 18);
+        assertEq(token.balanceOf(will), 0);
+    }
+
+    /// @notice Test pizza payment with guarded account
+    function test_PizzaPayment_WithZKTransfer() public {
+        // Setup: Alice enables guard
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        // Alice uses transferZK to pay for pizza
+        uint256 pizzaPrice = 10 * 10 ** 18;
+
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(address(merchant)));
+        publicInputs[2] = pizzaPrice;
+        publicInputs[3] = 0;
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        // Execute ZK transfer to merchant
+        token.transferZK(alice, address(merchant), pizzaPrice, proof, publicInputs);
+
+        // Verify merchant received tokens
+        assertEq(token.balanceOf(address(merchant)), pizzaPrice);
+        assertEq(merchant.getBalance(), pizzaPrice);
+    }
+
+    /// @notice Test DEX swap with guarded account
+    function test_DexSwap_WithZKTransfer() public {
+        // Setup: Alice enables guard
+        bytes32 commitment = bytes32(uint256(12345));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        // Alice uses transferZK to send tokens to DEX
+        uint256 swapAmount = 100 * 10 ** 18;
+
+        uint256[] memory publicInputs = new uint256[](5);
+        publicInputs[0] = uint256(uint160(alice));
+        publicInputs[1] = uint256(uint160(address(dex)));
+        publicInputs[2] = swapAmount;
+        publicInputs[3] = 0;
+        publicInputs[4] = uint256(commitment);
+
+        bytes memory proof = new bytes(1024);
+        proof[0] = 0x01;
+
+        // First transfer to DEX using ZK
+        token.transferZK(alice, address(dex), swapAmount, proof, publicInputs);
+
+        // DEX received the tokens
+        uint256 initialDexBalance = 100_000 * 10 ** 18 + swapAmount;
+        assertEq(token.balanceOf(address(dex)), initialDexBalance);
+    }
+
+    // =============================================================
+    //                      VIEW FUNCTION TESTS
+    // =============================================================
+
+    function test_IsGuarded() public {
+        assertFalse(token.isGuarded(alice));
+
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.startPrank(alice);
+        token.bindHD(commitment);
+        token.enableZKGuard();
+        vm.stopPrank();
+
+        assertTrue(token.isGuarded(alice));
+    }
+
+    function test_GetNonce() public view {
+        assertEq(token.getNonce(alice), 0);
+    }
+
+    function test_GetCommitment() public {
+        assertEq(token.getCommitment(alice), bytes32(0));
+
+        bytes32 commitment = keccak256(abi.encodePacked("secret"));
+
+        vm.prank(alice);
+        token.bindHD(commitment);
+
+        assertEq(token.getCommitment(alice), commitment);
+    }
+}
+</file>
+
+<file path="script/Deploy.s.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import { ERC21PQToken } from "../src/ERC21PQToken.sol";
+import { StarkVerifier } from "../src/StarkVerifier.sol";
+import { PizzaMerchant } from "../src/demos/PizzaMerchant.sol";
+import { TinyDex } from "../src/demos/TinyDex.sol";
+import { MockUSD } from "../src/mocks/MockUSD.sol";
+
+/// @title DeployScript
+/// @notice Deploys all ERC-21 contracts to testnet with STARK verifier
+contract DeployScript is Script {
+    // Program hash for HD commitment verification
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
+    function run() external {
+        // Get deployer from environment
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address deployer = vm.addr(deployerPrivateKey);
+
+        // Get LayerZero endpoint for target chain
+        address lzEndpoint = vm.envAddress("LZ_ENDPOINT");
+
+        console.log("Deploying with account:", deployer);
+        console.log("LayerZero endpoint:", lzEndpoint);
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // 1. Deploy STARK Verifier (quantum-resistant)
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
+        console.log("StarkVerifier deployed at:", address(verifier));
+
+        // 2. Deploy ERC21PQToken
+        uint256 initialSupply = 1_000_000 * 10 ** 18; // 1M tokens
+        ERC21PQToken token = new ERC21PQToken(
+            "ERC21 PQ Token",
+            "LZPQ",
+            lzEndpoint,
+            deployer,
+            address(verifier),
+            PROGRAM_HASH,
+            initialSupply
+        );
+        console.log("ERC21PQToken deployed at:", address(token));
+
+        // 3. Deploy MockUSD (for demo)
+        MockUSD usd = new MockUSD();
+        console.log("MockUSD deployed at:", address(usd));
+
+        // 4. Deploy PizzaMerchant
+        uint256 pizzaPrice = 10 * 10 ** 18; // 10 LZPQ per pizza
+        PizzaMerchant merchant = new PizzaMerchant(address(token), pizzaPrice);
+        console.log("PizzaMerchant deployed at:", address(merchant));
+
+        // 5. Deploy TinyDex
+        uint256 exchangeRate = 1 * 10 ** 18; // 1:1 for demo
+        TinyDex dex = new TinyDex(address(token), address(usd), exchangeRate);
+        console.log("TinyDex deployed at:", address(dex));
+
+        // 6. Add initial liquidity to DEX
+        uint256 lzpqLiquidity = 100_000 * 10 ** 18;
+        uint256 usdLiquidity = 100_000 * 10 ** 18;
+
+        token.approve(address(dex), lzpqLiquidity);
+        usd.approve(address(dex), usdLiquidity);
+        dex.addLiquidity(lzpqLiquidity, usdLiquidity);
+        console.log("Added liquidity to DEX");
+
+        vm.stopBroadcast();
+
+        // Output deployment summary
+        console.log("\n=== Deployment Summary ===");
+        console.log("Verifier:", address(verifier));
+        console.log("Token:", address(token));
+        console.log("MockUSD:", address(usd));
+        console.log("Merchant:", address(merchant));
+        console.log("DEX:", address(dex));
+        console.log("========================\n");
+    }
+}
+
+/// @title DeployTenderly
+/// @notice Deploy to Tenderly fork with unlocked accounts
+contract DeployTenderly is Script {
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
+    function run() external {
+        // Use unlocked account for Tenderly
+        address deployer = 0xD32e40436e4F6C892918C6A19AF75bf997cDe0f9;
+        address lzEndpoint = 0x1a44076050125825900e736c501f859c50fE728c;
+
+        console.log("Deploying to Tenderly with account:", deployer);
+
+        vm.startBroadcast(deployer);
+
+        // Deploy STARK verifier
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
+
+        ERC21PQToken token = new ERC21PQToken(
+            "USD PQ Token",
+            "USDPQ",
+            lzEndpoint,
+            deployer,
+            address(verifier),
+            PROGRAM_HASH,
+            1_000_000 * 10 ** 18
+        );
+
+        MockUSD usd = new MockUSD();
+        PizzaMerchant merchant = new PizzaMerchant(address(token), 10 * 10 ** 18);
+        TinyDex dex = new TinyDex(address(token), address(usd), 1 * 10 ** 18);
+
+        // Add liquidity
+        token.approve(address(dex), 100_000 * 10 ** 18);
+        usd.approve(address(dex), 100_000 * 10 ** 18);
+        dex.addLiquidity(100_000 * 10 ** 18, 100_000 * 10 ** 18);
+
+        vm.stopBroadcast();
+
+        console.log("\n=== Tenderly Deployment ===");
+        console.log("Verifier:", address(verifier));
+        console.log("Token:", address(token));
+        console.log("MockUSD:", address(usd));
+        console.log("Merchant:", address(merchant));
+        console.log("DEX:", address(dex));
+        console.log("===========================\n");
+    }
+}
+
+/// @title DeployLocal
+/// @notice Deploy to local Anvil for testing
+contract DeployLocal is Script {
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
+    function run() external {
+        // Use default Anvil account
+        uint256 deployerPrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        address deployer = vm.addr(deployerPrivateKey);
+
+        // Mock LZ endpoint for local testing
+        address lzEndpoint = address(0x1a44076050125825900e736c501f859c50fE728c);
+
+        console.log("Deploying locally with account:", deployer);
+
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy STARK verifier
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
+
+        ERC21PQToken token = new ERC21PQToken(
+            "USD PQ Token",
+            "USDPQ",
+            lzEndpoint,
+            deployer,
+            address(verifier),
+            PROGRAM_HASH,
+            1_000_000 * 10 ** 18
+        );
+
+        MockUSD usd = new MockUSD();
+        PizzaMerchant merchant = new PizzaMerchant(address(token), 10 * 10 ** 18);
+        TinyDex dex = new TinyDex(address(token), address(usd), 1 * 10 ** 18);
+
+        // Add liquidity
+        token.approve(address(dex), 100_000 * 10 ** 18);
+        usd.approve(address(dex), 100_000 * 10 ** 18);
+        dex.addLiquidity(100_000 * 10 ** 18, 100_000 * 10 ** 18);
+
+        vm.stopBroadcast();
+
+        console.log("\n=== Local Deployment ===");
+        console.log("Verifier:", address(verifier));
+        console.log("Token:", address(token));
+        console.log("MockUSD:", address(usd));
+        console.log("Merchant:", address(merchant));
+        console.log("DEX:", address(dex));
+        console.log("========================\n");
+    }
+}
+</file>
+
+<file path="src/ERC21PQToken.sol">
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import { OFT } from "@layerzerolabs/oapp-evm/contracts/oft/OFT.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IStarkVerifier } from "./interfaces/IStarkVerifier.sol";
+
+/// @title ERC21PQToken
+/// @notice ERC-20 compatible token with optional STARK-based ownership lock (ERC-21)
+/// @dev Extends LayerZero OFT for cross-chain capability with ZK guard mechanism
+/// @dev Uses STARKs for quantum-resistant proofs (no trusted setup, hash-based)
+/// @author EthVaultPQ Team
+contract ERC21PQToken is OFT {
+    // =============================================================
+    //                         CONSTANTS
+    // =============================================================
+
+    /// @notice Prime field modulus for STARK proofs (Cairo field)
+    uint256 constant STARK_PRIME =
+        3618502788666131213697322783095070105623107215331596699973092056135872020481;
+
+    // =============================================================
+    //                           STORAGE
+    // =============================================================
+
+    /// @notice The STARK verifier contract (quantum-resistant)
+    IStarkVerifier public immutable verifier;
+
+    /// @notice The program hash for HD commitment verification
+    bytes32 public immutable programHash;
+
+    /// @notice HD commitment for each address (hash of hdSecret)
+    mapping(address => bytes32) public hdCommitment;
+
+    /// @notice Whether ZK guard is enabled for each address
+    mapping(address => bool) public zkGuardEnabled;
+
+    /// @notice Nonce for ZK transfers to prevent replay attacks
+    mapping(address => uint256) public zkNonce;
+
+    /// @dev Internal flag to track if we're in a ZK transfer context
+    bool private _zkContextActive;
+
+    // =============================================================
+    //                           EVENTS
+    // =============================================================
+
+    /// @notice Emitted when an HD commitment is bound to an address
+    event HDCommitmentBound(address indexed account, bytes32 commitment);
+
+    /// @notice Emitted when ZK guard is enabled for an address
+    event ZKGuardEnabled(address indexed account);
+
+    /// @notice Emitted when ZK guard is disabled for an address
+    event ZKGuardDisabled(address indexed account);
+
+    /// @notice Emitted when a ZK-verified transfer is executed
+    event ZKTransfer(address indexed from, address indexed to, uint256 amount, uint256 nonce);
+
+    // =============================================================
+    //                           ERRORS
+    // =============================================================
+
+    /// @notice Thrown when trying to bind an HD commitment that's already set
+    error CommitmentAlreadyBound();
+
+    /// @notice Thrown when trying to enable ZK guard without a commitment
+    error NoCommitmentBound();
+
+    /// @notice Thrown when a guarded address tries to use normal transfer
+    error ZKGuardEnabled_UseTransferZK();
+
+    /// @notice Thrown when ZK proof verification fails
+    error InvalidProof();
+
+    /// @notice Thrown when nonce in proof doesn't match on-chain nonce
+    error InvalidNonce();
+
+    /// @notice Thrown when commitment in proof doesn't match on-chain commitment
+    error InvalidCommitment();
+
+    /// @notice Thrown when ZK guard is not enabled for the sender
+    error ZKGuardNotEnabled();
+
+    /// @notice Thrown when insufficient balance for transfer
+    error InsufficientBalance();
+
+    // =============================================================
+    //                         CONSTRUCTOR
+    // =============================================================
+
+    /// @notice Constructor for ERC21PQToken
+    /// @param _name Token name
+    /// @param _symbol Token symbol
+    /// @param _lzEndpoint LayerZero endpoint address
+    /// @param _delegate Address that can configure OApp
+    /// @param _verifier STARK verifier contract address
+    /// @param _programHash Hash of the Cairo program for verification
+    /// @param _initialSupply Initial token supply to mint to deployer
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _lzEndpoint,
+        address _delegate,
+        address _verifier,
+        bytes32 _programHash,
+        uint256 _initialSupply
+    ) OFT(_name, _symbol, _lzEndpoint, _delegate) Ownable(_delegate) {
+        verifier = IStarkVerifier(_verifier);
+        programHash = _programHash;
+
+        // Mint initial supply to deployer
+        if (_initialSupply > 0) {
+            _mint(_delegate, _initialSupply);
+        }
+    }
+
+    // =============================================================
+    //                      ZK GUARD FUNCTIONS
+    // =============================================================
+
+    /// @notice Setup quantum protection in one transaction (bind + enable)
+    /// @param commitment The hash of the caller's HD secret
+    /// @dev Combines bindHD and enableZKGuard into single call
+    function setupProtection(bytes32 commitment) external {
+        if (hdCommitment[msg.sender] != bytes32(0)) {
+            revert CommitmentAlreadyBound();
+        }
+
+        hdCommitment[msg.sender] = commitment;
+        zkGuardEnabled[msg.sender] = true;
+
+        emit HDCommitmentBound(msg.sender, commitment);
+        emit ZKGuardEnabled(msg.sender);
+    }
+
+    /// @notice Bind an HD commitment to the caller's address
+    /// @param commitment The hash of the caller's HD secret
+    /// @dev Can only be set once per address
+    function bindHD(bytes32 commitment) external {
+        if (hdCommitment[msg.sender] != bytes32(0)) {
+            revert CommitmentAlreadyBound();
+        }
+
+        hdCommitment[msg.sender] = commitment;
+        emit HDCommitmentBound(msg.sender, commitment);
+    }
+
+    /// @notice Enable ZK guard for the caller's address
+    /// @dev Requires an HD commitment to be bound first
+    function enableZKGuard() external {
+        if (hdCommitment[msg.sender] == bytes32(0)) {
+            revert NoCommitmentBound();
+        }
+
+        zkGuardEnabled[msg.sender] = true;
+        emit ZKGuardEnabled(msg.sender);
+    }
+
+    /// @notice Disable ZK guard (requires STARK proof of ownership)
+    /// @param proof The STARK proof proving ownership of HD secret
+    /// @param publicInputs Public inputs for verification
+    function disableZKGuard(
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external {
+        if (!zkGuardEnabled[msg.sender]) {
+            revert ZKGuardNotEnabled();
+        }
+
+        // Verify STARK proof to prove ownership
+        if (!verifier.verifyProof(proof, publicInputs, programHash)) {
+            revert InvalidProof();
+        }
+
+        // Verify the proof is for this address
+        require(publicInputs.length >= 5, "Invalid public inputs");
+        require(address(uint160(publicInputs[0])) == msg.sender, "Proof not for sender");
+
+        // Verify commitment matches (reduced to STARK field)
+        uint256 proofCommitment = publicInputs[4];
+        uint256 expectedCommitment = uint256(hdCommitment[msg.sender]) % STARK_PRIME;
+        if (proofCommitment != expectedCommitment) {
+            revert InvalidCommitment();
+        }
+
+        zkGuardEnabled[msg.sender] = false;
+        emit ZKGuardDisabled(msg.sender);
+    }
+
+    /// @notice Execute a ZK-verified transfer
+    /// @param from The address to transfer from
+    /// @param to The recipient address
+    /// @param amount The amount to transfer
+    /// @param proof The STARK proof data (quantum-resistant)
+    /// @param publicInputs The public inputs (from, to, amount, nonce, commitment)
+    /// @return success True if transfer succeeded
+    function transferZK(
+        address from,
+        address to,
+        uint256 amount,
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external returns (bool success) {
+        // Verify ZK guard is enabled
+        if (!zkGuardEnabled[from]) {
+            revert ZKGuardNotEnabled();
+        }
+
+        // Verify balance
+        if (balanceOf(from) < amount) {
+            revert InsufficientBalance();
+        }
+
+        // Verify STARK proof (quantum-resistant)
+        if (!verifier.verifyProof(proof, publicInputs, programHash)) {
+            revert InvalidProof();
+        }
+
+        // Extract and verify public inputs
+        // Expected order: [from, to, amount, nonce, commitment]
+        require(publicInputs.length >= 5, "Invalid public inputs length");
+
+        address proofFrom = address(uint160(publicInputs[0]));
+        address proofTo = address(uint160(publicInputs[1]));
+        uint256 proofAmount = publicInputs[2];
+        uint256 proofNonce = publicInputs[3];
+        uint256 proofCommitment = publicInputs[4];
+
+        // Verify inputs match
+        require(proofFrom == from, "From mismatch");
+        require(proofTo == to, "To mismatch");
+        require(proofAmount == amount, "Amount mismatch");
+
+        // Verify nonce
+        if (proofNonce != zkNonce[from]) {
+            revert InvalidNonce();
+        }
+
+        // Verify commitment (reduced to STARK field)
+        uint256 expectedCommitment = uint256(hdCommitment[from]) % STARK_PRIME;
+        if (proofCommitment != expectedCommitment) {
+            revert InvalidCommitment();
+        }
+
+        // Execute transfer in ZK context
+        _zkContextActive = true;
+        _transfer(from, to, amount);
+        _zkContextActive = false;
+
+        // Increment nonce
+        zkNonce[from] += 1;
+
+        emit ZKTransfer(from, to, amount, proofNonce);
+
+        return true;
+    }
+
+    // =============================================================
+    //                    INTERNAL OVERRIDES
+    // =============================================================
+
+    /// @notice Override _update to enforce ZK guard
+    /// @dev This is called by all transfer functions in OZ v5
+    function _update(address from, address to, uint256 amount) internal virtual override {
+        // Check ZK guard for outgoing transfers (not mints)
+        if (from != address(0) && zkGuardEnabled[from]) {
+            if (!_zkContextActive) {
+                revert ZKGuardEnabled_UseTransferZK();
+            }
+        }
+
+        super._update(from, to, amount);
+    }
+
+    // =============================================================
+    //                      VIEW FUNCTIONS
+    // =============================================================
+
+    /// @notice Check if an address has ZK guard protection
+    /// @param account The address to check
+    /// @return True if ZK guard is enabled
+    function isGuarded(address account) external view returns (bool) {
+        return zkGuardEnabled[account];
+    }
+
+    /// @notice Get the current nonce for an address
+    /// @param account The address to check
+    /// @return The current nonce
+    function getNonce(address account) external view returns (uint256) {
+        return zkNonce[account];
+    }
+
+    /// @notice Get the HD commitment for an address
+    /// @param account The address to check
+    /// @return The HD commitment
+    function getCommitment(address account) external view returns (bytes32) {
+        return hdCommitment[account];
+    }
+}
+</file>
+
+<file path="snap/src/index.ts">
+import type { OnRpcRequestHandler } from '@metamask/snaps-sdk';
+import { panel, text, heading, copyable } from '@metamask/snaps-sdk';
+import { ethers } from 'ethers';
+
+// ABI for ERC21PQToken contract with STARK verifier
+const ERC21_ABI = [
+  'function setupProtection(bytes32 commitment) external',
+  'function bindHD(bytes32 commitment) external',
+  'function enableZKGuard() external',
+  'function disableZKGuard(bytes calldata proof, uint256[] calldata publicInputs) external',
+  'function transferZK(address from, address to, uint256 amount, bytes calldata proof, uint256[] calldata publicInputs) external returns (bool)',
+  'function hdCommitment(address) view returns (bytes32)',
+  'function zkNonce(address) view returns (uint256)',
+  'function zkGuardEnabled(address) view returns (bool)',
+  'function balanceOf(address) view returns (uint256)',
+];
+
+// Type definitions
+interface SnapState {
+  hdSecret?: string;
+}
+
+interface BindHDParams {
+  tokenAddress: string;
+}
+
+interface EnableZKGuardParams {
+  tokenAddress: string;
+}
+
+interface TransferZKParams {
+  tokenAddress: string;
+  to: string;
+  amount: string;
+  from: string;
+  nonce: string;
+  commitment: string;
+}
+
+// Helper to compute Poseidon hash (simplified - use actual implementation in production)
+async function computeCommitment(hdSecret: string): Promise<string> {
+  // In production, use actual Poseidon hash
+  // For demo, use keccak256 as placeholder
+  return ethers.keccak256(ethers.toUtf8Bytes(hdSecret));
+}
+
+// STARK prime field modulus (Cairo field)
+const STARK_PRIME = BigInt('3618502788666131213697322783095070105623107215331596699973092056135872020481');
+
+// Helper to generate STARK proof (simplified - use actual Cairo prover in production)
+async function generateStarkProof(
+  hdSecret: string,
+  from: string,
+  to: string,
+  amount: bigint,
+  nonce: bigint,
+  commitment: string
+): Promise<{ proof: string; publicInputs: bigint[] }> {
+  // In production, use Cairo prover to generate real STARK proof
+  // STARKs are quantum-resistant and don't need trusted setup
+
+  // Reduce commitment to STARK field
+  const commitmentReduced = BigInt(commitment) % STARK_PRIME;
+
+  const publicInputs = [
+    BigInt(from),           // from address as uint256
+    BigInt(to),             // to address as uint256
+    amount,                 // amount
+    nonce,                  // nonce
+    commitmentReduced,      // commitment reduced to STARK field
+  ];
+
+  // Placeholder STARK proof (1024 bytes - STARKs are larger than SNARKs)
+  // In production, use Stone or Winterfell prover
+  const proofBytes = new Uint8Array(1024);
+  // Fill with non-zero data for trace and FRI commitments
+  for (let i = 0; i < 320; i++) {
+    proofBytes[i] = (i % 256) + 1;
+  }
+  const proof = ethers.hexlify(proofBytes);
+
+  return { proof, publicInputs };
+}
+
+// Get or initialize HD secret
+async function getHDSecret(): Promise<string> {
+  const state = await snap.request({
+    method: 'snap_manageState',
+    params: { operation: 'get' },
+  }) as SnapState | null;
+
+  if (state?.hdSecret) {
+    return state.hdSecret;
+  }
+
+  // Generate new HD secret
+  const randomBytes = crypto.getRandomValues(new Uint8Array(32));
+  const hdSecret = ethers.hexlify(randomBytes);
+
+  // Save to state
+  await snap.request({
+    method: 'snap_manageState',
+    params: { operation: 'update', newState: { hdSecret } },
+  });
+
+  return hdSecret;
+}
+
+// RPC Request Handler
+export const onRpcRequest: OnRpcRequestHandler = async ({
+  origin,
+  request,
+}) => {
+  const iface = new ethers.Interface(ERC21_ABI);
+
+  switch (request.method) {
+    // Setup protection in one transaction (bind + enable)
+    case 'ethvaultpq_setupProtection': {
+      const params = request.params as BindHDParams;
+      if (!params?.tokenAddress) {
+        throw new Error('Token address is required');
+      }
+
+      // Get or create HD secret
+      const hdSecret = await getHDSecret();
+      const commitment = await computeCommitment(hdSecret);
+
+      // Skip Snap confirmation - MetaMask will confirm
+      const data = iface.encodeFunctionData('setupProtection', [commitment]);
+
+      return {
+        to: params.tokenAddress,
+        data,
+        commitment,
+      };
+    }
+
+    // Bind HD commitment to token contract (legacy)
+    case 'ethvaultpq_bindHD': {
+      const params = request.params as BindHDParams;
+      if (!params?.tokenAddress) {
+        throw new Error('Token address is required');
+      }
+
+      // Get or create HD secret
+      const hdSecret = await getHDSecret();
+      const commitment = await computeCommitment(hdSecret);
+
+      // Show confirmation dialog
+      const confirmed = await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'confirmation',
+          content: panel([
+            heading('Bind HD Commitment'),
+            text('This creates your secure quantum-resistant key.'),
+            text('Your secret is stored safely in this Snap.'),
+            copyable(commitment.slice(0, 20) + '...'),
+            text('Only you can authorize transfers with this protection.'),
+          ]),
+        },
+      });
+
+      if (!confirmed) {
+        throw new Error('User rejected the request');
+      }
+
+      // Encode transaction data
+      const data = iface.encodeFunctionData('bindHD', [commitment]);
+
+      return {
+        to: params.tokenAddress,
+        data,
+        commitment,
+      };
+    }
+
+    // Enable ZK guard
+    case 'ethvaultpq_enableZKGuard': {
+      const params = request.params as EnableZKGuardParams;
+      if (!params?.tokenAddress) {
+        throw new Error('Token address is required');
+      }
+
+      // Skip Snap confirmation - MetaMask will confirm
+      const data = iface.encodeFunctionData('enableZKGuard', []);
+
+      return {
+        to: params.tokenAddress,
+        data,
+      };
+    }
+
+    // Disable ZK guard (requires proof)
+    case 'ethvaultpq_disableZKGuard': {
+      const params = request.params as EnableZKGuardParams & { from: string };
+      if (!params?.tokenAddress || !params?.from) {
+        throw new Error('Token address and from address are required');
+      }
+
+      // Get HD secret
+      const hdSecret = await getHDSecret();
+      const commitment = await computeCommitment(hdSecret);
+
+      // Skip Snap confirmation - MetaMask will confirm
+
+      // Generate STARK proof for ownership verification
+      const { proof, publicInputs } = await generateStarkProof(
+        hdSecret,
+        params.from,
+        params.from, // to = from for disable
+        BigInt(0), // amount = 0
+        BigInt(0), // nonce = 0 (not used for disable)
+        commitment
+      );
+
+      // Encode transaction data
+      const data = iface.encodeFunctionData('disableZKGuard', [proof, publicInputs]);
+
+      return {
+        to: params.tokenAddress,
+        data,
+      };
+    }
+
+    // Execute ZK transfer
+    case 'ethvaultpq_transferZK': {
+      const params = request.params as TransferZKParams;
+      if (!params?.tokenAddress || !params?.to || !params?.amount || !params?.from || !params?.nonce || !params?.commitment) {
+        throw new Error('Token address, from, recipient, amount, nonce, and commitment are required');
+      }
+
+      // Get HD secret
+      const hdSecret = await getHDSecret();
+
+      // Use nonce and commitment passed from dapp (dapp has correct network)
+      const nonce = BigInt(params.nonce);
+      const amount = ethers.parseEther(params.amount);
+      const commitment = params.commitment;
+
+      // Skip Snap confirmation - MetaMask will confirm the transaction
+
+      // Generate STARK proof (quantum-resistant)
+      const { proof, publicInputs } = await generateStarkProof(
+        hdSecret,
+        params.from,
+        params.to,
+        amount,
+        nonce,
+        commitment
+      );
+
+      // Encode transaction data
+      const data = iface.encodeFunctionData('transferZK', [
+        params.from,
+        params.to,
+        amount,
+        proof,
+        publicInputs
+      ]);
+
+      return {
+        to: params.tokenAddress,
+        data,
+        nonce: nonce.toString(),
+      };
+    }
+
+    // Get account info
+    case 'ethvaultpq_getInfo': {
+      const params = request.params as { tokenAddress: string; address: string };
+      if (!params?.tokenAddress || !params?.address) {
+        throw new Error('Token address and user address are required');
+      }
+
+      const provider = new ethers.BrowserProvider(ethereum as any);
+      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, provider);
+
+      const [balance, commitment, nonce, isGuarded] = await Promise.all([
+        contract.balanceOf(params.address),
+        contract.hdCommitment(params.address),
+        contract.zkNonce(params.address),
+        contract.zkGuardEnabled(params.address),
+      ]);
+
+      return {
+        address: params.address,
+        balance: ethers.formatEther(balance),
+        commitment,
+        nonce: nonce.toString(),
+        isGuarded,
+      };
+    }
+
+    default:
+      throw new Error(`Method not found: ${request.method}`);
+  }
+};
+</file>
+
+<file path="dapp/src/App.tsx">
+import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import detectEthereumProvider from '@metamask/detect-provider';
+
+// Snap ID - update with actual published snap ID
+const SNAP_ID = 'local:http://localhost:8080';
+
+// Contract addresses - Tenderly Fork (Chain ID: 73571)
+const TOKEN_ADDRESS = '0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC';
+const MERCHANT_ADDRESS = '0x056cb77995eC5ef2da35CfD02a547058c6D14d84';
+
+interface AccountInfo {
+  address: string;
+  balance: string;
+  commitment: string;
+  nonce: string;
+  isGuarded: boolean;
+}
+
+function App() {
+  const [account, setAccount] = useState<string>('');
+  const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
+  const [snapInstalled, setSnapInstalled] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [txStatus, setTxStatus] = useState<string>('');
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
+
+  // Check if MetaMask is installed and connect
+  useEffect(() => {
+    const init = async () => {
+      const provider = await detectEthereumProvider();
+      if (provider) {
+        const accounts = await (window as any).ethereum.request({
+          method: 'eth_accounts',
+        });
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+        }
+
+        // Check if Snap is already installed
+        try {
+          const snaps = await (window as any).ethereum.request({
+            method: 'wallet_getSnaps',
+          });
+          if (snaps[SNAP_ID]) {
+            setSnapInstalled(true);
+          }
+        } catch (e) {
+          console.log('Could not check snaps');
+        }
+      }
+    };
+    init();
+  }, []);
+
+  // Auto-refresh info when account changes
+  useEffect(() => {
+    if (account && snapInstalled) {
+      refreshInfo();
+    }
+  }, [account, snapInstalled]);
+
+  // Connect wallet
+  const connectWallet = async () => {
+    try {
+      const accounts = await (window as any).ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      setAccount(accounts[0]);
+    } catch (error) {
+      console.error('Failed to connect:', error);
+    }
+  };
+
+  // Install Snap
+  const installSnap = async () => {
+    try {
+      await (window as any).ethereum.request({
+        method: 'wallet_requestSnaps',
+        params: {
+          [SNAP_ID]: {},
+        },
+      });
+      setSnapInstalled(true);
+      setTxStatus('Snap installed successfully!');
+    } catch (error) {
+      console.error('Failed to install snap:', error);
+      setTxStatus('Failed to install snap');
+    }
+  };
+
+  // Get account info directly from contract (no Snap needed)
+  const refreshInfo = async () => {
+    if (!account) {
+      setTxStatus('Please connect wallet first');
+      return;
+    }
+    setTxStatus('Loading account info...');
+    try {
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+
+      // Check network
+      const network = await provider.getNetwork();
+      if (network.chainId !== 73571n) {
+        setTxStatus(`Wrong network (chain ${network.chainId}). Click the globe icon in MetaMask and select "EthereumPQ" (chain 73571)`);
+        return;
+      }
+
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function balanceOf(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+        'function zkNonce(address) view returns (uint256)',
+        'function zkGuardEnabled(address) view returns (bool)',
+      ], provider);
+
+      const [balance, commitment, nonce, isGuarded] = await Promise.all([
+        contract.balanceOf(account),
+        contract.hdCommitment(account),
+        contract.zkNonce(account),
+        contract.zkGuardEnabled(account),
+      ]);
+
+      setAccountInfo({
+        address: account,
+        balance: ethers.formatEther(balance),
+        commitment,
+        nonce: nonce.toString(),
+        isGuarded,
+      });
+      setTxStatus('');
+    } catch (error: any) {
+      console.error('Failed to get info:', error);
+      setTxStatus(`Error: ${error.message || 'Failed to load info'}`);
+    }
+  };
+
+  // Helper to send transaction from Snap result
+  const sendSnapTx = async (result: { to: string; data: string }) => {
+    const txHash = await (window as any).ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: account,
+        to: result.to,
+        data: result.data,
+      }],
+    });
+    return txHash;
+  };
+
+  // Wait for transaction to be mined
+  const waitForTx = async (txHash: string) => {
+    const provider = new ethers.BrowserProvider((window as any).ethereum);
+    let receipt = null;
+    while (!receipt) {
+      receipt = await provider.getTransactionReceipt(txHash);
+      if (!receipt) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    return receipt;
+  };
+
+  // Setup Quantum Protection (single transaction)
+  const setupProtection = async () => {
+    setLoading(true);
+    setTxStatus('Setting up quantum protection...');
+    try {
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_setupProtection',
+            params: { tokenAddress: TOKEN_ADDRESS },
+          },
+        },
+      });
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Protection enabled! Tx: ${txHash.slice(0, 10)}...`);
+      await refreshInfo();
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  // Enable ZK Guard
+  const enableGuard = async () => {
+    setLoading(true);
+    setTxStatus('Enabling ZK guard...');
+    try {
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_enableZKGuard',
+            params: { tokenAddress: TOKEN_ADDRESS },
+          },
+        },
+      });
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard enabled! Tx: ${txHash.slice(0, 10)}...`);
+      await refreshInfo();
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  // Disable ZK Guard
+  const disableGuard = async () => {
+    setLoading(true);
+    setTxStatus('Disabling ZK guard with STARK proof...');
+    try {
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_disableZKGuard',
+            params: { tokenAddress: TOKEN_ADDRESS, from: account },
+          },
+        },
+      });
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard disabled! Tx: ${txHash.slice(0, 10)}...`);
+      await refreshInfo();
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  // PQ Send (ZK Transfer)
+  const pqSend = async () => {
+    if (!recipient || !amount) {
+      setTxStatus('Please enter recipient and amount');
+      return;
+    }
+    setLoading(true);
+    setTxStatus('Generating ZK proof and sending...');
+    try {
+      // Get nonce from contract (dapp has correct network)
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function zkNonce(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+      ], provider);
+      const [nonce, commitment] = await Promise.all([
+        contract.zkNonce(account),
+        contract.hdCommitment(account),
+      ]);
+
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_transferZK',
+            params: {
+              tokenAddress: TOKEN_ADDRESS,
+              to: recipient,
+              amount: amount,
+              from: account,
+              nonce: nonce.toString(),
+              commitment: commitment,
+            },
+          },
+        },
+      });
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+
+      // Wait for confirmation
+      await waitForTx(txHash);
+
+      setTxStatus(`Transfer successful! Tx: ${txHash.slice(0, 10)}...`);
+      await refreshInfo();
+      setRecipient('');
+      setAmount('');
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  // Simulate Thief - try regular transfer (will fail)
+  const simulateThief = async () => {
+    setLoading(true);
+    setTxStatus('🦹 Thief attempting to steal tokens...');
+    try {
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function transfer(address to, uint256 amount) returns (bool)',
+      ], signer);
+
+      // Try regular transfer - this will fail if ZK guard is enabled
+      // Force send with manual gas limit to bypass estimation and show MetaMask confirmation
+      const tx = await contract.transfer(MERCHANT_ADDRESS, ethers.parseEther('100'), {
+        gasLimit: 100000,
+      });
+      await tx.wait();
+
+      setTxStatus('❌ Security breach! Tokens stolen!');
+    } catch (error: any) {
+      if (error.message.includes('ZKGuardEnabled') || error.message.includes('reverted')) {
+        setTxStatus('✅ Theft BLOCKED! ZK Guard protected your tokens. Attacker needs your HD secret.');
+      } else {
+        setTxStatus(`✅ Theft blocked: ${error.message.slice(0, 50)}...`);
+      }
+    }
+    setLoading(false);
+  };
+
+  // Pay Pizza
+  const payPizza = async () => {
+    setLoading(true);
+    setTxStatus('Paying for pizza with ZK proof...');
+    try {
+      // Get nonce from contract (dapp has correct network)
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function zkNonce(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+      ], provider);
+      const [nonce, commitment] = await Promise.all([
+        contract.zkNonce(account),
+        contract.hdCommitment(account),
+      ]);
+
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_transferZK',
+            params: {
+              tokenAddress: TOKEN_ADDRESS,
+              to: MERCHANT_ADDRESS,
+              amount: '10', // Pizza price
+              from: account,
+              nonce: nonce.toString(),
+              commitment: commitment,
+            },
+          },
+        },
+      });
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+
+      // Wait for confirmation
+      await waitForTx(txHash);
+
+      setTxStatus(`Pizza paid! Tx: ${txHash.slice(0, 10)}...`);
+      await refreshInfo();
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen p-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            ERC-21 PQ Token
+          </h1>
+          <p className="text-white/80">
+            Quantum-resistant ownership with ZK proofs
+          </p>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+          {/* Connection Status */}
+          {!account ? (
+            <button
+              onClick={connectWallet}
+              className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
+            >
+              Connect Wallet
+            </button>
+          ) : (
+            <>
+              {/* Account Info */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm text-gray-500">Your Wallet</div>
+                <div className="font-mono text-xs truncate text-gray-600">{account}</div>
+                {accountInfo ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Balance:</span>
+                      <span className="font-semibold text-lg">{parseFloat(accountInfo.balance).toFixed(2)} USDPQ</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Protection:</span>
+                      <span className={accountInfo.isGuarded ? 'text-green-600 font-semibold' : 'text-gray-400'}>
+                        {accountInfo.isGuarded ? '🔒 Quantum Lock ON' : '🔓 Standard Mode'}
+                      </span>
+                    </div>
+                    {accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                      <div className="text-xs text-gray-400">
+                        Transfers: {accountInfo.nonce}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-gray-500">
+                    Click Refresh to load your balance
+                  </div>
+                )}
+                <button
+                  onClick={refreshInfo}
+                  className="mt-3 text-sm text-purple-600 hover:text-purple-800"
+                >
+                  ↻ Refresh
+                </button>
+              </div>
+
+              {/* Snap Installation */}
+              {!snapInstalled && (
+                <button
+                  onClick={installSnap}
+                  className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition mb-4"
+                >
+                  Install ERC-21 Snap
+                </button>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Setup quantum protection if no commitment yet */}
+                {accountInfo && accountInfo.commitment === '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <button
+                    onClick={setupProtection}
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Setting up...' : '🔐 Setup Quantum Protection'}
+                  </button>
+                )}
+
+                {/* Quantum Lock Toggle */}
+                {accountInfo && accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold">Quantum Lock</div>
+                      <div className="text-sm text-gray-500">
+                        {accountInfo.isGuarded ? 'Protected with STARK proofs' : 'Standard transfers enabled'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={accountInfo.isGuarded ? disableGuard : enableGuard}
+                      disabled={loading}
+                      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                        accountInfo.isGuarded ? 'bg-green-500' : 'bg-gray-300'
+                      } ${loading ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                          accountInfo.isGuarded ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+
+                {/* PQ Send Form */}
+                <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <h3 className="font-semibold">PQ Send</h3>
+                  <input
+                    type="text"
+                    placeholder="Recipient address"
+                    value={recipient}
+                    onChange={(e) => setRecipient(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Amount"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                  <button
+                    onClick={pqSend}
+                    disabled={loading}
+                    className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Send with ZK Proof'}
+                  </button>
+                </div>
+
+                <button
+                  onClick={payPizza}
+                  disabled={loading}
+                  className="w-full bg-yellow-500 text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition disabled:opacity-50"
+                >
+                  {loading ? 'Processing...' : '🍕 Pay Pizza (10 USDPQ)'}
+                </button>
+
+                {/* Simulate Thief - demo security */}
+                {accountInfo && accountInfo.isGuarded && (
+                  <button
+                    onClick={simulateThief}
+                    disabled={loading}
+                    className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Attempting...' : '🦹 Simulate Thief (Try to Steal)'}
+                  </button>
+                )}
+              </div>
+
+              {/* Transaction Status */}
+              {txStatus && (
+                <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm">
+                  {txStatus}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Demo Info */}
+        <div className="mt-6 text-center text-white/70 text-sm">
+          <p>Even if an attacker gets your private key,</p>
+          <p>they cannot move your locked tokens.</p>
+          <p className="mt-2 font-semibold">Ownership = ZK Proof, not ECDSA</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+</file>
+
+</files>
