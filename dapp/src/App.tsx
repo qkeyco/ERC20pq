@@ -99,6 +99,14 @@ function App() {
     setTxStatus('Loading account info...');
     try {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
+
+      // Check network
+      const network = await provider.getNetwork();
+      if (network.chainId !== 73571n) {
+        setTxStatus(`Wrong network! You're on chain ${network.chainId}. Please switch to Tenderly Fork (73571)`);
+        return;
+      }
+
       const contract = new ethers.Contract(TOKEN_ADDRESS, [
         'function balanceOf(address) view returns (uint256)',
         'function hdCommitment(address) view returns (bytes32)',
