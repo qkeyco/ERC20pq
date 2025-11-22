@@ -90,7 +90,7 @@ function App() {
     }
   };
 
-  // Get account info
+  // Get account info directly from contract (no Snap needed)
   const refreshInfo = async () => {
     if (!account) {
       setTxStatus('Please connect wallet first');
@@ -98,17 +98,28 @@ function App() {
     }
     setTxStatus('Loading account info...');
     try {
-      const result = await (window as any).ethereum.request({
-        method: 'wallet_invokeSnap',
-        params: {
-          snapId: SNAP_ID,
-          request: {
-            method: 'ethvaultpq_getInfo',
-            params: { tokenAddress: TOKEN_ADDRESS, address: account },
-          },
-        },
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function balanceOf(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+        'function zkNonce(address) view returns (uint256)',
+        'function zkGuardEnabled(address) view returns (bool)',
+      ], provider);
+
+      const [balance, commitment, nonce, isGuarded] = await Promise.all([
+        contract.balanceOf(account),
+        contract.hdCommitment(account),
+        contract.zkNonce(account),
+        contract.zkGuardEnabled(account),
+      ]);
+
+      setAccountInfo({
+        address: account,
+        balance: ethers.formatEther(balance),
+        commitment,
+        nonce: nonce.toString(),
+        isGuarded,
       });
-      setAccountInfo(result);
       setTxStatus('');
     } catch (error: any) {
       console.error('Failed to get info:', error);
