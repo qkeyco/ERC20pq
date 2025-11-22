@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { apolloClient } from './apollo';
+import { tenderlyClient, baseClient } from './apollo';
 
 export interface CommandResult {
   status: 'success' | 'error';
@@ -79,27 +79,30 @@ Available Commands:
 
   'test subgraph': async () => {
     try {
-      const result = await apolloClient.query({
-        query: GET_ZK_TRANSFERS,
-        variables: { first: 5 },
-      });
+      const [ethResult, baseResult] = await Promise.all([
+        tenderlyClient.query({ query: GET_ZK_TRANSFERS, variables: { first: 5 } }),
+        baseClient.query({ query: GET_ZK_TRANSFERS, variables: { first: 5 } }),
+      ]);
 
-      if (result.errors) {
+      if (ethResult.errors || baseResult.errors) {
+        const errors = [...(ethResult.errors || []), ...(baseResult.errors || [])];
         return {
           status: 'error',
-          message: `GraphQL Errors: ${result.errors.map(e => e.message).join(', ')}`,
-          data: result.errors,
+          message: `GraphQL Errors: ${errors.map(e => e.message).join(', ')}`,
+          data: errors,
         };
       }
 
-      const transfers = result.data?.zktransfers || [];
+      const ethTransfers = ethResult.data?.zktransfers || [];
+      const baseTransfers = baseResult.data?.zktransfers || [];
+      const totalTransfers = ethTransfers.length + baseTransfers.length;
 
       return {
         status: 'success',
-        message: transfers.length > 0
-          ? `✓ Subgraph connected! Found ${transfers.length} ZK transfers`
-          : '✓ Subgraph connected! No ZK transfers yet',
-        data: transfers,
+        message: totalTransfers > 0
+          ? `✓ Both subgraphs connected! Found ${totalTransfers} ZK transfers (${ethTransfers.length} ETH, ${baseTransfers.length} BASE)`
+          : '✓ Both subgraphs connected! No ZK transfers yet',
+        data: [...ethTransfers.map((t: any) => ({ ...t, chain: 'ETH' })), ...baseTransfers.map((t: any) => ({ ...t, chain: 'BASE' }))],
       };
     } catch (error: any) {
       return {
@@ -122,19 +125,30 @@ Available Commands:
         timestamp_gt
       };
 
-      const result = await apolloClient.query({
-        query: GET_ZK_TRANSFERS,
-        variables,
-      });
+      // Query both chains in parallel
+      const [ethResult, baseResult] = await Promise.all([
+        tenderlyClient.query({ query: GET_ZK_TRANSFERS, variables }),
+        baseClient.query({ query: GET_ZK_TRANSFERS, variables }),
+      ]);
 
-      const transfers = result.data?.zktransfers || [];
+      const ethTransfers = (ethResult.data?.zktransfers || []).map((t: any) => ({ ...t, chain: 'ETH' }));
+      const baseTransfers = (baseResult.data?.zktransfers || []).map((t: any) => ({ ...t, chain: 'BASE' }));
+
+      // Merge and sort by timestamp (newest first)
+      const allTransfers = [...ethTransfers, ...baseTransfers].sort((a, b) =>
+        parseInt(b.timestamp) - parseInt(a.timestamp)
+      );
+
+      const totalCount = allTransfers.length;
+      const ethCount = ethTransfers.length;
+      const baseCount = baseTransfers.length;
 
       return {
         status: 'success',
         message: hours
-          ? `Last ${hours}h: ${transfers.length} quantum-resistant transfers`
-          : `All time: ${transfers.length} quantum-resistant transfers`,
-        data: transfers,
+          ? `Last ${hours}h: ${totalCount} quantum-resistant transfers (${ethCount} ETH, ${baseCount} BASE)`
+          : `All time: ${totalCount} quantum-resistant transfers (${ethCount} ETH, ${baseCount} BASE)`,
+        data: allTransfers,
       };
     } catch (error: any) {
       return {
@@ -146,29 +160,35 @@ Available Commands:
 
   stats: async () => {
     try {
-      const result = await apolloClient.query({
-        query: GET_STATS,
-      });
+      const [ethResult, baseResult] = await Promise.all([
+        tenderlyClient.query({ query: GET_STATS }),
+        baseClient.query({ query: GET_STATS }),
+      ]);
 
-      const stats = result.data?.zkstats;
+      const ethStats = ethResult.data?.zkstats;
+      const baseStats = baseResult.data?.zkstats;
 
-      if (!stats) {
+      if (!ethStats && !baseStats) {
         return {
           status: 'success',
           message: 'No statistics available yet',
         };
       }
 
+      const totalZKTransfers = (parseInt(ethStats?.totalZKTransfers || '0') + parseInt(baseStats?.totalZKTransfers || '0'));
+      const totalZKFailures = (parseInt(ethStats?.totalZKProofFailures || '0') + parseInt(baseStats?.totalZKProofFailures || '0'));
+      const totalTransfers = (parseInt(ethStats?.totalTransfers || '0') + parseInt(baseStats?.totalTransfers || '0'));
+
       return {
         status: 'success',
         message: `
-Global Statistics:
-  Total ZK Transfers: ${stats.totalZKTransfers}
-  Total ZK Failures: ${stats.totalZKProofFailures}
-  Total Transfers: ${stats.totalTransfers}
-  Last Updated: ${new Date(parseInt(stats.lastUpdated) * 1000).toLocaleString()}
+Global Statistics (Multi-Chain):
+  Total ZK Transfers: ${totalZKTransfers} (${ethStats?.totalZKTransfers || 0} ETH, ${baseStats?.totalZKTransfers || 0} BASE)
+  Total ZK Failures: ${totalZKFailures} (${ethStats?.totalZKProofFailures || 0} ETH, ${baseStats?.totalZKProofFailures || 0} BASE)
+  Total Transfers: ${totalTransfers} (${ethStats?.totalTransfers || 0} ETH, ${baseStats?.totalTransfers || 0} BASE)
+  Last Updated: ${new Date(Math.max(parseInt(ethStats?.lastUpdated || '0'), parseInt(baseStats?.lastUpdated || '0')) * 1000).toLocaleString()}
 `,
-        data: stats,
+        data: { ethStats, baseStats },
       };
     } catch (error: any) {
       return {
@@ -184,27 +204,31 @@ Global Statistics:
       const now = Math.floor(Date.now() / 1000);
       const yesterday = now - (24 * 3600);
 
-      const result = await apolloClient.query({
-        query: GET_FAILED_PROOFS,
-        variables: {
-          first: 100,
-          timestamp_gt: yesterday.toString(),
-        },
-      });
+      const variables = {
+        first: 100,
+        timestamp_gt: yesterday.toString(),
+      };
 
-      const failedProofs = result.data?.zkproofFaileds || [];
+      const [ethResult, baseResult] = await Promise.all([
+        tenderlyClient.query({ query: GET_FAILED_PROOFS, variables }),
+        baseClient.query({ query: GET_FAILED_PROOFS, variables }),
+      ]);
+
+      const ethFailedProofs = (ethResult.data?.zkproofFaileds || []).map((p: any) => ({ ...p, chain: 'ETH' }));
+      const baseFailedProofs = (baseResult.data?.zkproofFaileds || []).map((p: any) => ({ ...p, chain: 'BASE' }));
+      const allFailedProofs = [...ethFailedProofs, ...baseFailedProofs];
+
       const threshold = parseInt(process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20');
-
-      const isAlert = failedProofs.length >= threshold;
+      const isAlert = allFailedProofs.length >= threshold;
 
       return {
         status: isAlert ? 'error' : 'success',
         message: isAlert
-          ? `🚨 QUANTUM CRACK ALERT! ${failedProofs.length} failed proofs in 24h (threshold: ${threshold})`
-          : failedProofs.length > 0
-            ? `${failedProofs.length} failed proofs in 24h (threshold: ${threshold})`
+          ? `🚨 QUANTUM CRACK ALERT! ${allFailedProofs.length} failed proofs in 24h (${ethFailedProofs.length} ETH, ${baseFailedProofs.length} BASE) - threshold: ${threshold}`
+          : allFailedProofs.length > 0
+            ? `${allFailedProofs.length} failed proofs in 24h (${ethFailedProofs.length} ETH, ${baseFailedProofs.length} BASE) - threshold: ${threshold}`
             : `✓ No failed proofs in 24h (threshold: ${threshold})\n\nNote: Failure tracking requires updated contract with ZKProofFailed event.`,
-        data: failedProofs,
+        data: allFailedProofs,
       };
     } catch (error: any) {
       return {

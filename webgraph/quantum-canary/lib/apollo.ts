@@ -1,21 +1,38 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
-// Use proxy route to avoid mixed content blocking (HTTPS -> HTTP)
-const httpLink = new HttpLink({
-  uri: '/api/graphql', // Proxy to HTTP subgraph server-side
+// Default options for both clients
+const defaultOptions = {
+  watchQuery: {
+    fetchPolicy: 'no-cache' as const,
+    errorPolicy: 'ignore' as const,
+  },
+  query: {
+    fetchPolicy: 'no-cache' as const,
+    errorPolicy: 'all' as const,
+  },
+};
+
+// Tenderly mainnet subgraph client
+const tenderlyLink = new HttpLink({
+  uri: '/api/graphql', // Proxy to qcanary subgraph
 });
 
-export const apolloClient = new ApolloClient({
-  link: httpLink,
+export const tenderlyClient = new ApolloClient({
+  link: tenderlyLink,
   cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: 'no-cache',
-      errorPolicy: 'ignore',
-    },
-    query: {
-      fetchPolicy: 'no-cache',
-      errorPolicy: 'all',
-    },
-  },
+  defaultOptions,
 });
+
+// Base subgraph client
+const baseLink = new HttpLink({
+  uri: '/api/graphql-base', // Proxy to qcanary-base subgraph
+});
+
+export const baseClient = new ApolloClient({
+  link: baseLink,
+  cache: new InMemoryCache(),
+  defaultOptions,
+});
+
+// Default export (for backward compatibility)
+export const apolloClient = tenderlyClient;

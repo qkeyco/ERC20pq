@@ -2,8 +2,6 @@ import { BigInt } from "@graphprotocol/graph-ts"
 import {
   Transfer as TransferEvent,
   ZKTransfer as ZKTransferEvent
-  // Uncomment when contract has ZKProofFailed event:
-  // ZKProofFailed as ZKProofFailedEvent
 } from "../generated/ERC21PQToken/ERC21PQToken"
 import { Transfer, ZKTransfer, ZKProofFailed, ZKStats } from "../generated/schema"
 
@@ -45,29 +43,6 @@ export function handleZKTransfer(event: ZKTransferEvent): void {
   // Update stats
   updateStats("zk_success", event.block.timestamp)
 }
-
-// Handler for failed ZK proof attempts
-// COMMENTED OUT until contract is updated to emit ZKProofFailed events
-// Uncomment this function when you add ZKProofFailed event to the contract:
-/*
-export function handleZKProofFailed(event: ZKProofFailedEvent): void {
-  let entity = new ZKProofFailed(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.amount = event.params.amount
-  entity.blockNumber = event.block.number
-  entity.timestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-
-  // Update stats
-  updateStats("zk_failed", event.block.timestamp)
-}
-*/
 
 // Helper function to update global statistics
 function updateStats(eventType: string, timestamp: BigInt): void {

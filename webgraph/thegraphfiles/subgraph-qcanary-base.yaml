@@ -4,13 +4,14 @@ schema:
 dataSources:
   - kind: ethereum
     name: ERC21PQToken
-    network: base  # Base L2 network
+    network: mainnet
     source:
-      # TODO: Replace with your Base contract address
-      address: '0x0000000000000000000000000000000000000000'
+      # ERC21PQToken deployed on Tenderly Base Fork (Chain ID: 8453)
+      # Using 'mainnet' network label because Graph Node uses same Tenderly RPC
+      address: '0xfc663c1c06764c9ecfcbf26444bd2e69068f8130'
       abi: ERC21PQToken
-      # TODO: Replace with your Base deployment block
-      startBlock: 0
+      # Starting from recent block (adjust if contract was deployed earlier)
+      startBlock: 23650000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -30,8 +31,4 @@ dataSources:
         # Quantum-resistant ZK Transfer event (successful proofs)
         - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
           handler: handleZKTransfer
-        # Failed ZK proof attempts - COMMENTED OUT until contract is updated
-        # Uncomment this after adding ZKProofFailed event to contract:
-        # - event: ZKProofFailed(indexed address,indexed address,uint256)
-        #   handler: handleZKProofFailed
       file: ./src/mapping.ts

@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []
