@@ -81,7 +81,7 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_getInfo',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: TOKEN_ADDRESS, address: account },
           },
         },
       });
@@ -89,6 +89,19 @@ function App() {
     } catch (error) {
       console.error('Failed to get info:', error);
     }
+  };
+
+  // Helper to send transaction from Snap result
+  const sendSnapTx = async (result: { to: string; data: string }) => {
+    const txHash = await (window as any).ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: account,
+        to: result.to,
+        data: result.data,
+      }],
+    });
+    return txHash;
   };
 
   // Bind HD Commitment
@@ -106,7 +119,8 @@ function App() {
           },
         },
       });
-      setTxStatus(`Commitment bound! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Commitment bound! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -129,7 +143,8 @@ function App() {
           },
         },
       });
-      setTxStatus(`ZK guard enabled! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard enabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -148,11 +163,12 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_disableZKGuard',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: TOKEN_ADDRESS, from: account },
           },
         },
       });
-      setTxStatus(`ZK guard disabled! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard disabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -179,11 +195,13 @@ function App() {
               tokenAddress: TOKEN_ADDRESS,
               to: recipient,
               amount: amount,
+              from: account,
             },
           },
         },
       });
-      setTxStatus(`Transfer successful! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Transfer successful! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
       setRecipient('');
       setAmount('');
@@ -208,11 +226,13 @@ function App() {
               tokenAddress: TOKEN_ADDRESS,
               to: MERCHANT_ADDRESS,
               amount: '10', // Pizza price
+              from: account,
             },
           },
         },
       });
-      setTxStatus(`Pizza paid! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Pizza paid! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);

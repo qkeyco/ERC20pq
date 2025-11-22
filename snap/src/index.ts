@@ -31,6 +31,7 @@ interface TransferZKParams {
   tokenAddress: string;
   to: string;
   amount: string;
+  from: string;
 }
 
 // Helper to compute Poseidon hash (simplified - use actual implementation in production)
@@ -101,6 +102,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }) => {
+  const iface = new ethers.Interface(ERC21_ABI);
+
   switch (request.method) {
     // Bind HD commitment to token contract
     case 'ethvaultpq_bindHD': {
@@ -132,20 +135,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw new Error('User rejected the request');
       }
 
-      // Get Ethereum provider
-      const provider = new ethers.BrowserProvider(ethereum as any);
-      const signer = await provider.getSigner();
-
-      // Create contract instance
-      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, signer);
-
-      // Call bindHD
-      const tx = await contract.bindHD(commitment);
-      const receipt = await tx.wait();
+      // Encode transaction data
+      const data = iface.encodeFunctionData('bindHD', [commitment]);
 
       return {
-        success: true,
-        txHash: receipt.hash,
+        to: params.tokenAddress,
+        data,
         commitment,
       };
     }
@@ -176,38 +171,25 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw new Error('User rejected the request');
       }
 
-      // Get Ethereum provider
-      const provider = new ethers.BrowserProvider(ethereum as any);
-      const signer = await provider.getSigner();
-
-      // Create contract instance
-      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, signer);
-
-      // Call enableZKGuard
-      const tx = await contract.enableZKGuard();
-      const receipt = await tx.wait();
+      // Encode transaction data
+      const data = iface.encodeFunctionData('enableZKGuard', []);
 
       return {
-        success: true,
-        txHash: receipt.hash,
+        to: params.tokenAddress,
+        data,
       };
     }
 
     // Disable ZK guard (requires proof)
     case 'ethvaultpq_disableZKGuard': {
-      const params = request.params as EnableZKGuardParams;
-      if (!params?.tokenAddress) {
-        throw new Error('Token address is required');
+      const params = request.params as EnableZKGuardParams & { from: string };
+      if (!params?.tokenAddress || !params?.from) {
+        throw new Error('Token address and from address are required');
       }
 
       // Get HD secret
       const hdSecret = await getHDSecret();
       const commitment = await computeCommitment(hdSecret);
-
-      // Get Ethereum provider
-      const provider = new ethers.BrowserProvider(ethereum as any);
-      const signer = await provider.getSigner();
-      const from = await signer.getAddress();
 
       // Show confirmation dialog
       const confirmed = await snap.request({
@@ -228,50 +210,40 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw new Error('User rejected the request');
       }
 
-      // Create contract instance
-      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, signer);
-
       // Generate STARK proof for ownership verification
       const { proof, publicInputs } = await generateStarkProof(
         hdSecret,
-        from,
-        from, // to = from for disable
+        params.from,
+        params.from, // to = from for disable
         BigInt(0), // amount = 0
         BigInt(0), // nonce = 0 (not used for disable)
         commitment
       );
 
-      // Call disableZKGuard
-      const tx = await contract.disableZKGuard(proof, publicInputs);
-      const receipt = await tx.wait();
+      // Encode transaction data
+      const data = iface.encodeFunctionData('disableZKGuard', [proof, publicInputs]);
 
       return {
-        success: true,
-        txHash: receipt.hash,
+        to: params.tokenAddress,
+        data,
       };
     }
 
     // Execute ZK transfer
     case 'ethvaultpq_transferZK': {
       const params = request.params as TransferZKParams;
-      if (!params?.tokenAddress || !params?.to || !params?.amount) {
-        throw new Error('Token address, recipient, and amount are required');
+      if (!params?.tokenAddress || !params?.to || !params?.amount || !params?.from) {
+        throw new Error('Token address, from, recipient, and amount are required');
       }
 
       // Get HD secret
       const hdSecret = await getHDSecret();
       const commitment = await computeCommitment(hdSecret);
 
-      // Get Ethereum provider
+      // Get nonce from contract
       const provider = new ethers.BrowserProvider(ethereum as any);
-      const signer = await provider.getSigner();
-      const from = await signer.getAddress();
-
-      // Create contract instance
-      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, signer);
-
-      // Get current nonce from contract
-      const nonce = await contract.zkNonce(from);
+      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, provider);
+      const nonce = await contract.zkNonce(params.from);
       const amount = ethers.parseEther(params.amount);
 
       // Show confirmation dialog
@@ -296,52 +268,48 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       // Generate STARK proof (quantum-resistant)
       const { proof, publicInputs } = await generateStarkProof(
         hdSecret,
-        from,
+        params.from,
         params.to,
         amount,
         nonce,
         commitment
       );
 
-      // Execute transfer
-      const tx = await contract.transferZK(
-        from,
+      // Encode transaction data
+      const data = iface.encodeFunctionData('transferZK', [
+        params.from,
         params.to,
         amount,
         proof,
         publicInputs
-      );
-      const receipt = await tx.wait();
+      ]);
 
       return {
-        success: true,
-        txHash: receipt.hash,
+        to: params.tokenAddress,
+        data,
         nonce: nonce.toString(),
       };
     }
 
     // Get account info
     case 'ethvaultpq_getInfo': {
-      const params = request.params as { tokenAddress: string };
-      if (!params?.tokenAddress) {
-        throw new Error('Token address is required');
+      const params = request.params as { tokenAddress: string; address: string };
+      if (!params?.tokenAddress || !params?.address) {
+        throw new Error('Token address and user address are required');
       }
 
       const provider = new ethers.BrowserProvider(ethereum as any);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-
       const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, provider);
 
       const [balance, commitment, nonce, isGuarded] = await Promise.all([
-        contract.balanceOf(address),
-        contract.hdCommitment(address),
-        contract.zkNonce(address),
-        contract.zkGuardEnabled(address),
+        contract.balanceOf(params.address),
+        contract.hdCommitment(params.address),
+        contract.zkNonce(params.address),
+        contract.zkGuardEnabled(params.address),
       ]);
 
       return {
-        address,
+        address: params.address,
         balance: ethers.formatEther(balance),
         commitment,
         nonce: nonce.toString(),
