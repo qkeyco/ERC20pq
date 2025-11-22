@@ -10,8 +10,8 @@ dataSources:
       # Using 'mainnet' network label because Graph Node uses same Tenderly RPC
       address: '0xfc663c1c06764c9ecfcbf26444bd2e69068f8130'
       abi: ERC21PQToken
-      # Starting from block 0
-      startBlock: 0
+      # Starting from recent block (adjust if contract was deployed earlier)
+      startBlock: 23650000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
