@@ -10,7 +10,7 @@ export interface CommandResult {
 // GraphQL query for ZK transfers (successful quantum-resistant transfers)
 const GET_ZK_TRANSFERS = gql`
   query GetZKTransfers($first: Int = 100, $timestamp_gt: BigInt) {
-    zkTransfers(
+    zktransfers(
       first: $first
       orderBy: timestamp
       orderDirection: desc
@@ -24,7 +24,6 @@ const GET_ZK_TRANSFERS = gql`
       timestamp
       blockNumber
       transactionHash
-      success
     }
   }
 `;
@@ -32,7 +31,7 @@ const GET_ZK_TRANSFERS = gql`
 // Query for failed ZK proofs
 const GET_FAILED_PROOFS = gql`
   query GetFailedProofs($first: Int = 100, $timestamp_gt: BigInt) {
-    zkProofFaileds(
+    zkproofFaileds(
       first: $first
       orderBy: timestamp
       orderDirection: desc
@@ -52,7 +51,7 @@ const GET_FAILED_PROOFS = gql`
 // Query for global statistics
 const GET_STATS = gql`
   query GetStats {
-    zkStats(id: "global") {
+    zkstats(id: "global") {
       totalZKTransfers
       totalZKProofFailures
       totalTransfers
@@ -93,7 +92,7 @@ Available Commands:
         };
       }
 
-      const transfers = result.data?.zkTransfers || [];
+      const transfers = result.data?.zktransfers || [];
 
       return {
         status: 'success',
@@ -128,7 +127,7 @@ Available Commands:
         variables,
       });
 
-      const transfers = result.data?.zkTransfers || [];
+      const transfers = result.data?.zktransfers || [];
 
       return {
         status: 'success',
@@ -151,7 +150,7 @@ Available Commands:
         query: GET_STATS,
       });
 
-      const stats = result.data?.zkStats;
+      const stats = result.data?.zkstats;
 
       if (!stats) {
         return {
@@ -193,7 +192,7 @@ Global Statistics:
         },
       });
 
-      const failedProofs = result.data?.zkProofFaileds || [];
+      const failedProofs = result.data?.zkproofFaileds || [];
       const threshold = parseInt(process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20');
 
       const isAlert = failedProofs.length >= threshold;
