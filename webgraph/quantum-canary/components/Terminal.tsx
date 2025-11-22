@@ -148,7 +148,8 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
       window.removeEventListener('resize', handleResize);
       term.dispose();
     };
-  }, [onCommandResult]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   return (
     <div className="terminal-wrapper h-full w-full">
