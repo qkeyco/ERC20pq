@@ -42,10 +42,12 @@
 - [ ] Generic wrapper factory contract
 
 ### LayerZero ZK Proofs
-- [ ] Add STARK proof requirement to cross-chain sends
-- [ ] Verify ZK proof on destination chain
-- [ ] Custom OApp adapter with proof verification
-- [ ] Research: LayerZero DVN with ZK support
+- [x] Add STARK proof requirement to cross-chain sends
+- [x] Override _debit() to block ZK-guarded accounts from regular send()
+- [x] Implement sendZK() with proof verification
+- [x] Cross-chain nonce management for replay protection
+- [ ] Research: LayerZero DVN with ZK support (future enhancement)
+- Note: Source-only verification - destination receives normally (viral opt-in model)
 
 ---
 
@@ -99,9 +101,11 @@
 - [x] React dApp with full UI
 - [x] PizzaMerchant demo contract
 - [x] TinyDex demo contract
-- [x] 18 passing tests
+- [x] **25 passing tests**
 - [x] Deployment script
 - [x] The Graph schema and mappings
+- [x] **LayerZero ZK wrapper** - sendZK() for cross-chain with STARK proofs
+- [x] MockLzEndpoint with full send() support for testing
 
 ---
 
@@ -118,11 +122,11 @@
 
 ## Priority Order for Hackathon
 
-1. **STARK verifier** - Core cryptographic integrity
+1. **STARK verifier** - Core cryptographic integrity ✅
 2. **Valid proof generation** - End-to-end functionality
 3. **WETHPQ wrapper** - Highest demo value
 4. **Testnet deployment** - Public demonstration
-5. **LayerZero proofs** - Advanced feature
+5. ~~**LayerZero proofs** - Advanced feature~~ ✅ COMPLETED
 
 ---
 
