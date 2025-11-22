@@ -92,7 +92,11 @@ function App() {
 
   // Get account info
   const refreshInfo = async () => {
-    if (!account) return;
+    if (!account) {
+      setTxStatus('Please connect wallet first');
+      return;
+    }
+    setTxStatus('Loading account info...');
     try {
       const result = await (window as any).ethereum.request({
         method: 'wallet_invokeSnap',
@@ -105,8 +109,10 @@ function App() {
         },
       });
       setAccountInfo(result);
-    } catch (error) {
+      setTxStatus('');
+    } catch (error: any) {
       console.error('Failed to get info:', error);
+      setTxStatus(`Error: ${error.message || 'Failed to load info'}`);
     }
   };
 
@@ -308,13 +314,12 @@ function App() {
                   </div>
                 ) : (
                   <div className="mt-3 text-sm text-gray-500">
-                    Install Snap and click Refresh to load your info
+                    Click Refresh to load your balance
                   </div>
                 )}
                 <button
                   onClick={refreshInfo}
-                  disabled={!snapInstalled}
-                  className="mt-3 text-sm text-purple-600 hover:text-purple-800 disabled:text-gray-400"
+                  className="mt-3 text-sm text-purple-600 hover:text-purple-800"
                 >
                   ↻ Refresh
                 </button>
