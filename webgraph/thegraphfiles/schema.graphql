@@ -1,0 +1,42 @@
+# Keep existing Transfer entity (working baseline)
+type Transfer @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+# Successful quantum-resistant transfers
+type ZKTransfer @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  amount: BigInt!
+  nonce: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+# Failed ZK proof attempts (requires contract update to emit events)
+type ZKProofFailed @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  amount: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+# Statistics entity to track overall metrics
+type ZKStats @entity(immutable: false) {
+  id: String! # Singleton: "global"
+  totalZKTransfers: BigInt!
+  totalZKProofFailures: BigInt!
+  totalTransfers: BigInt!
+  lastUpdated: BigInt!
+}

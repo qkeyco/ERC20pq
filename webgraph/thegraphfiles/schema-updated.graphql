@@ -1,0 +1,9 @@
+type ProofAttempt @entity(immutable: true) {
+  id: Bytes!
+  user: Bytes! # address
+  success: Boolean!
+  timestamp: BigInt!
+  chainId: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}

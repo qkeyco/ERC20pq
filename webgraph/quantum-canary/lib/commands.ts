@@ -7,14 +7,56 @@ export interface CommandResult {
   data?: any;
 }
 
-// GraphQL query for transfers (will be updated for ProofAttempted events later)
-const GET_TRANSFERS = gql`
-  query GetTransfers($first: Int = 5) {
-    transfers(first: $first, orderBy: id, orderDirection: desc) {
+// GraphQL query for ZK transfers (successful quantum-resistant transfers)
+const GET_ZK_TRANSFERS = gql`
+  query GetZKTransfers($first: Int = 100, $timestamp_gt: BigInt) {
+    zkTransfers(
+      first: $first
+      orderBy: timestamp
+      orderDirection: desc
+      where: { timestamp_gt: $timestamp_gt }
+    ) {
       id
       from
       to
-      value
+      amount
+      nonce
+      timestamp
+      blockNumber
+      transactionHash
+      success
+    }
+  }
+`;
+
+// Query for failed ZK proofs
+const GET_FAILED_PROOFS = gql`
+  query GetFailedProofs($first: Int = 100, $timestamp_gt: BigInt) {
+    zkProofFaileds(
+      first: $first
+      orderBy: timestamp
+      orderDirection: desc
+      where: { timestamp_gt: $timestamp_gt }
+    ) {
+      id
+      from
+      to
+      amount
+      timestamp
+      blockNumber
+      transactionHash
+    }
+  }
+`;
+
+// Query for global statistics
+const GET_STATS = gql`
+  query GetStats {
+    zkStats(id: "global") {
+      totalZKTransfers
+      totalZKProofFailures
+      totalTransfers
+      lastUpdated
     }
   }
 `;
@@ -28,8 +70,9 @@ Available Commands:
   help              - Show this help message
   test subgraph     - Test subgraph connection
   status            - Show current network status
-  show zk [hours]   - Show ZK proofs (coming soon)
-  proofs failed     - Show failed proofs (coming soon)
+  show zk [hours]   - Show ZK transfers (default: all time)
+  proofs failed     - Show failed proofs and check alert threshold
+  stats             - Show global ZK transfer statistics
   chain switch      - Switch networks (coming soon)
   clear             - Clear terminal
 `,
@@ -38,7 +81,7 @@ Available Commands:
   'test subgraph': async () => {
     try {
       const result = await apolloClient.query({
-        query: GET_TRANSFERS,
+        query: GET_ZK_TRANSFERS,
         variables: { first: 5 },
       });
 
@@ -50,13 +93,13 @@ Available Commands:
         };
       }
 
-      const transfers = result.data?.transfers || [];
+      const transfers = result.data?.zkTransfers || [];
 
       return {
         status: 'success',
         message: transfers.length > 0
-          ? `Found ${transfers.length} transfers`
-          : 'No transfers found (empty result - this is expected)',
+          ? `✓ Subgraph connected! Found ${transfers.length} ZK transfers`
+          : '✓ Subgraph connected! No ZK transfers yet',
         data: transfers,
       };
     } catch (error: any) {
@@ -68,13 +111,117 @@ Available Commands:
     }
   },
 
+  'show zk': async (args: string[]) => {
+    const hours = args[0] ? parseInt(args[0]) : null;
+
+    try {
+      const variables: any = { first: 100 };
+
+      if (hours) {
+        const now = Math.floor(Date.now() / 1000);
+        const hoursAgo = now - (hours * 3600);
+        variables.timestamp_gt = hoursAgo.toString();
+      }
+
+      const result = await apolloClient.query({
+        query: GET_ZK_TRANSFERS,
+        variables,
+      });
+
+      const transfers = result.data?.zkTransfers || [];
+
+      return {
+        status: 'success',
+        message: hours
+          ? `Last ${hours}h: ${transfers.length} quantum-resistant transfers`
+          : `All time: ${transfers.length} quantum-resistant transfers`,
+        data: transfers,
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: `Error: ${error.message}`,
+      };
+    }
+  },
+
+  stats: async () => {
+    try {
+      const result = await apolloClient.query({
+        query: GET_STATS,
+      });
+
+      const stats = result.data?.zkStats;
+
+      if (!stats) {
+        return {
+          status: 'success',
+          message: 'No statistics available yet',
+        };
+      }
+
+      return {
+        status: 'success',
+        message: `
+Global Statistics:
+  Total ZK Transfers: ${stats.totalZKTransfers}
+  Total ZK Failures: ${stats.totalZKProofFailures}
+  Total Transfers: ${stats.totalTransfers}
+  Last Updated: ${new Date(parseInt(stats.lastUpdated)).toLocaleString()}
+`,
+        data: stats,
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: `Error: ${error.message}`,
+      };
+    }
+  },
+
+  'proofs failed': async () => {
+    try {
+      // Last 24 hours
+      const now = Math.floor(Date.now() / 1000);
+      const yesterday = now - (24 * 3600);
+
+      const result = await apolloClient.query({
+        query: GET_FAILED_PROOFS,
+        variables: {
+          first: 100,
+          timestamp_gt: yesterday.toString(),
+        },
+      });
+
+      const failedProofs = result.data?.zkProofFaileds || [];
+      const threshold = parseInt(process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20');
+
+      const isAlert = failedProofs.length >= threshold;
+
+      return {
+        status: isAlert ? 'error' : 'success',
+        message: isAlert
+          ? `🚨 QUANTUM CRACK ALERT! ${failedProofs.length} failed proofs in 24h (threshold: ${threshold})`
+          : failedProofs.length > 0
+            ? `${failedProofs.length} failed proofs in 24h (threshold: ${threshold})`
+            : `✓ No failed proofs in 24h (threshold: ${threshold})\n\nNote: Failure tracking requires updated contract with ZKProofFailed event.`,
+        data: failedProofs,
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: `Error: ${error.message}`,
+      };
+    }
+  },
+
   status: async () => ({
     status: 'success',
     message: `
 Network: ${process.env.NEXT_PUBLIC_NETWORK || 'tenderly-eth'}
 Chain ID: ${process.env.NEXT_PUBLIC_CHAIN_ID || '73571'}
 Subgraph: Connected
-Alert Threshold: ${process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20'}
+Alert Threshold: ${process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20'} failed proofs/24h
 Status: ONLINE
 `,
   }),
@@ -90,7 +237,7 @@ export function parseCommand(input: string): { command: string; args: string[] }
   const trimmed = input.trim();
   const parts = trimmed.split(/\s+/);
 
-  // Handle multi-word commands like "test subgraph"
+  // Handle multi-word commands
   if (parts.length >= 2 && parts[0] === 'test' && parts[1] === 'subgraph') {
     return { command: 'test subgraph', args: parts.slice(2) };
   }
