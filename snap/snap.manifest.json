@@ -7,12 +7,12 @@
     "url": "https://github.com/erc21pq/snap.git"
   },
   "source": {
-    "shasum": "xFZUeT915E65/kfjdcDsjavsSblzo60Hr7eilkdPiHs=",
+    "shasum": "wsq+YtC34E0/oIo0YivHeKShEBrTdAj3nrrwSPfjrvo=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
         "iconPath": "images/icon.svg",
-        "packageName": "@erc21pq/snap",
+        "packageName": "@jamesptagg/erc21pq-snap",
         "registry": "https://registry.npmjs.org/"
       }
     }
