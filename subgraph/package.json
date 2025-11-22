@@ -1,0 +1,17 @@
+{
+  "name": "erc21pq-subgraph",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ erc21pq-subgraph",
+    "create-local": "graph create --node http://localhost:8020/ erc21pq-subgraph",
+    "remove-local": "graph remove --node http://localhost:8020/ erc21pq-subgraph",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 erc21pq-subgraph"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.60.0",
+    "@graphprotocol/graph-ts": "0.31.0"
+  }
+}

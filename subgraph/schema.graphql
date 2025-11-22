@@ -1,0 +1,76 @@
+"""
+Account entity representing a user's ERC-21 token state
+"""
+type Account @entity {
+  id: Bytes! # address
+  balance: BigInt!
+  hdCommitment: Bytes
+  zkGuardEnabled: Boolean!
+  zkNonce: BigInt!
+  transfers: [Transfer!]! @derivedFrom(field: "from")
+  transfersReceived: [Transfer!]! @derivedFrom(field: "to")
+  zkTransfers: [ZKTransfer!]! @derivedFrom(field: "from")
+  zkTransfersReceived: [ZKTransfer!]! @derivedFrom(field: "to")
+}
+
+"""
+Standard ERC-20 Transfer event
+"""
+type Transfer @entity(immutable: true) {
+  id: Bytes!
+  from: Account!
+  to: Account!
+  value: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+"""
+ZK-verified transfer event
+"""
+type ZKTransfer @entity(immutable: true) {
+  id: Bytes!
+  from: Account!
+  to: Account!
+  amount: BigInt!
+  nonce: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+"""
+HD Commitment binding event
+"""
+type HDCommitmentBound @entity(immutable: true) {
+  id: Bytes!
+  account: Account!
+  commitment: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+"""
+ZK Guard enabled event
+"""
+type ZKGuardEnabledEvent @entity(immutable: true) {
+  id: Bytes!
+  account: Account!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+"""
+Global statistics
+"""
+type TokenStats @entity {
+  id: ID!
+  totalSupply: BigInt!
+  totalTransfers: BigInt!
+  totalZKTransfers: BigInt!
+  totalGuardedAccounts: BigInt!
+  totalCommitments: BigInt!
+}
