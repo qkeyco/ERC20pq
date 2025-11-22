@@ -307,29 +307,41 @@ function App() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <button
-                  onClick={bindHD}
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Bind HD Commitment'}
-                </button>
+                {/* Only show Bind HD if no commitment yet */}
+                {accountInfo && accountInfo.commitment === '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <button
+                    onClick={bindHD}
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Bind HD Commitment'}
+                  </button>
+                )}
 
-                <button
-                  onClick={enableGuard}
-                  disabled={loading}
-                  className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Enable Quantum Lock'}
-                </button>
-
-                <button
-                  onClick={disableGuard}
-                  disabled={loading}
-                  className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Disable Quantum Lock'}
-                </button>
+                {/* Quantum Lock Toggle */}
+                {accountInfo && accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold">Quantum Lock</div>
+                      <div className="text-sm text-gray-500">
+                        {accountInfo.isGuarded ? 'Protected with STARK proofs' : 'Standard transfers enabled'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={accountInfo.isGuarded ? disableGuard : enableGuard}
+                      disabled={loading}
+                      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                        accountInfo.isGuarded ? 'bg-green-500' : 'bg-gray-300'
+                      } ${loading ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                          accountInfo.isGuarded ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
 
                 {/* PQ Send Form */}
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
