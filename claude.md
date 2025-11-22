@@ -33,3 +33,24 @@
 ### Deployment
 - Local: `forge script script/Deploy.s.sol:DeployLocal --broadcast`
 - Testnet: `forge script script/Deploy.s.sol:DeployScript --rpc-url <RPC_URL> --broadcast`
+
+### Network Configuration
+- **Network**: Tenderly Fork of Ethereum Mainnet
+- **Chain ID**: 73571
+- **LayerZero Endpoint**: Use appropriate endpoint for Tenderly fork
+
+### Snap Deployment
+- Local development: `cd snap && yarn build && yarn start` (serves on port 8080)
+- NPM publish: `cd snap && npm publish` (for MetaMask Flask)
+
+### Project Structure
+```
+ERC20pq/
+├── src/           # Solidity contracts
+├── test/          # Foundry tests
+├── script/        # Deployment scripts
+├── circuits/      # Cairo programs for STARK proofs
+├── snap/          # MetaMask Snap (port 8080)
+├── dapp/          # React frontend
+└── subgraph/      # The Graph subgraph
+```

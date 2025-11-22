@@ -2,10 +2,11 @@ import type { OnRpcRequestHandler } from '@metamask/snaps-sdk';
 import { panel, text, heading, copyable } from '@metamask/snaps-sdk';
 import { ethers } from 'ethers';
 
-// ABI for ERC21PQToken contract
+// ABI for ERC21PQToken contract with STARK verifier
 const ERC21_ABI = [
   'function bindHD(bytes32 commitment) external',
   'function enableZKGuard() external',
+  'function disableZKGuard(bytes calldata proof, uint256[] calldata publicInputs) external',
   'function transferZK(address from, address to, uint256 amount, bytes calldata proof, uint256[] calldata publicInputs) external returns (bool)',
   'function hdCommitment(address) view returns (bytes32)',
   'function zkNonce(address) view returns (uint256)',
@@ -39,8 +40,8 @@ async function computeCommitment(hdSecret: string): Promise<string> {
   return ethers.keccak256(ethers.toUtf8Bytes(hdSecret));
 }
 
-// Helper to generate ZK proof (simplified - use actual snarkjs in production)
-async function generateProof(
+// Helper to generate STARK proof (simplified - use actual Cairo prover in production)
+async function generateStarkProof(
   hdSecret: string,
   from: string,
   to: string,
@@ -48,8 +49,8 @@ async function generateProof(
   nonce: bigint,
   commitment: string
 ): Promise<{ proof: string; publicInputs: bigint[] }> {
-  // In production, load WASM and zkey, then generate real proof
-  // For demo, create placeholder proof
+  // In production, use Cairo prover to generate real STARK proof
+  // STARKs are quantum-resistant and don't need trusted setup
 
   const publicInputs = [
     BigInt(from),           // from address as uint256
@@ -59,10 +60,13 @@ async function generateProof(
     BigInt(commitment),     // commitment
   ];
 
-  // Placeholder proof (256 bytes of non-zero data)
-  // In production, use snarkjs.groth16.fullProve()
-  const proofBytes = new Uint8Array(256);
-  proofBytes[0] = 1; // Make it non-zero for placeholder verifier
+  // Placeholder STARK proof (1024 bytes - STARKs are larger than SNARKs)
+  // In production, use Stone or Winterfell prover
+  const proofBytes = new Uint8Array(1024);
+  // Fill with non-zero data for trace and FRI commitments
+  for (let i = 0; i < 320; i++) {
+    proofBytes[i] = (i % 256) + 1;
+  }
   const proof = ethers.hexlify(proofBytes);
 
   return { proof, publicInputs };
@@ -189,6 +193,64 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       };
     }
 
+    // Disable ZK guard (requires proof)
+    case 'ethvaultpq_disableZKGuard': {
+      const params = request.params as EnableZKGuardParams;
+      if (!params?.tokenAddress) {
+        throw new Error('Token address is required');
+      }
+
+      // Get HD secret
+      const hdSecret = await getHDSecret();
+      const commitment = await computeCommitment(hdSecret);
+
+      // Get Ethereum provider
+      const provider = new ethers.BrowserProvider(ethereum as any);
+      const signer = await provider.getSigner();
+      const from = await signer.getAddress();
+
+      // Show confirmation dialog
+      const confirmed = await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'confirmation',
+          content: panel([
+            heading('Disable ZK Guard'),
+            text('This will disable ZK guard protection on your tokens.'),
+            text(`Token: ${params.tokenAddress}`),
+            text('⚠️ After disabling, normal transfers will work again.'),
+            text('You will need to provide a STARK proof to prove ownership.'),
+          ]),
+        },
+      });
+
+      if (!confirmed) {
+        throw new Error('User rejected the request');
+      }
+
+      // Create contract instance
+      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, signer);
+
+      // Generate STARK proof for ownership verification
+      const { proof, publicInputs } = await generateStarkProof(
+        hdSecret,
+        from,
+        from, // to = from for disable
+        BigInt(0), // amount = 0
+        BigInt(0), // nonce = 0 (not used for disable)
+        commitment
+      );
+
+      // Call disableZKGuard
+      const tx = await contract.disableZKGuard(proof, publicInputs);
+      const receipt = await tx.wait();
+
+      return {
+        success: true,
+        txHash: receipt.hash,
+      };
+    }
+
     // Execute ZK transfer
     case 'ethvaultpq_transferZK': {
       const params = request.params as TransferZKParams;
@@ -231,8 +293,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw new Error('User rejected the request');
       }
 
-      // Generate ZK proof
-      const { proof, publicInputs } = await generateProof(
+      // Generate STARK proof (quantum-resistant)
+      const { proof, publicInputs } = await generateStarkProof(
         hdSecret,
         from,
         params.to,

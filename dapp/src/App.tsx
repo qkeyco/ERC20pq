@@ -137,6 +137,29 @@ function App() {
     setLoading(false);
   };
 
+  // Disable ZK Guard
+  const disableGuard = async () => {
+    setLoading(true);
+    setTxStatus('Disabling ZK guard with STARK proof...');
+    try {
+      const result = await (window as any).ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: SNAP_ID,
+          request: {
+            method: 'ethvaultpq_disableZKGuard',
+            params: { tokenAddress: TOKEN_ADDRESS },
+          },
+        },
+      });
+      setTxStatus(`ZK guard disabled! Tx: ${result.txHash.slice(0, 10)}...`);
+      await refreshInfo();
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
   // PQ Send (ZK Transfer)
   const pqSend = async () => {
     if (!recipient || !amount) {
@@ -278,6 +301,14 @@ function App() {
                   className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
                 >
                   {loading ? 'Processing...' : 'Enable Quantum Lock'}
+                </button>
+
+                <button
+                  onClick={disableGuard}
+                  disabled={loading}
+                  className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+                >
+                  {loading ? 'Processing...' : 'Disable Quantum Lock'}
                 </button>
 
                 {/* PQ Send Form */}
