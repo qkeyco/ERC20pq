@@ -1,0 +1,230 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --terminal-green: #00ff00;
+  --terminal-bg: #000000;
+  --monitor-bezel: #cccccc;
+  --monitor-glow: #ffcc00;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: #0a0a0a;
+  font-family: 'VT323', monospace;
+}
+
+/* Terminal Styling */
+.terminal {
+  background-color: var(--terminal-bg);
+  color: var(--terminal-green);
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  text-shadow: 0 0 5px var(--terminal-green);
+}
+
+.terminal .xterm {
+  height: 100%;
+}
+
+.terminal .xterm-viewport {
+  background-color: transparent !important;
+}
+
+.terminal .xterm-screen {
+  background-color: transparent !important;
+}
+
+/* CRT Monitor Effect */
+.monitor {
+  border: 8px solid var(--monitor-bezel);
+  border-radius: 12px;
+  box-shadow:
+    0 0 20px var(--monitor-glow),
+    inset 0 0 40px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanlines effect */
+.monitor::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Screen flicker */
+.monitor::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(18, 16, 16, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  animation: flicker 0.15s infinite;
+  z-index: 11;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.27861;
+  }
+  5% {
+    opacity: 0.34769;
+  }
+  10% {
+    opacity: 0.23604;
+  }
+  15% {
+    opacity: 0.90626;
+  }
+  20% {
+    opacity: 0.18128;
+  }
+  25% {
+    opacity: 0.83891;
+  }
+  30% {
+    opacity: 0.65583;
+  }
+  35% {
+    opacity: 0.67807;
+  }
+  40% {
+    opacity: 0.26559;
+  }
+  45% {
+    opacity: 0.84693;
+  }
+  50% {
+    opacity: 0.96019;
+  }
+  55% {
+    opacity: 0.08594;
+  }
+  60% {
+    opacity: 0.20313;
+  }
+  65% {
+    opacity: 0.71988;
+  }
+  70% {
+    opacity: 0.53455;
+  }
+  75% {
+    opacity: 0.37288;
+  }
+  80% {
+    opacity: 0.71428;
+  }
+  85% {
+    opacity: 0.70419;
+  }
+  90% {
+    opacity: 0.7003;
+  }
+  95% {
+    opacity: 0.36108;
+  }
+  100% {
+    opacity: 0.24387;
+  }
+}
+
+/* Sidebar Styling */
+.sidebar {
+  background-color: rgba(0, 20, 0, 0.95);
+  color: var(--terminal-green);
+  padding: 20px;
+  border-left: 2px solid var(--terminal-green);
+  font-family: 'VT323', monospace;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  text-shadow: 0 0 10px var(--terminal-green);
+}
+
+/* Success/Error indicators */
+.status-success {
+  color: #00ff00;
+  text-shadow: 0 0 8px #00ff00;
+}
+
+.status-error {
+  color: #ff0000;
+  text-shadow: 0 0 8px #ff0000;
+}
+
+/* Alert box */
+.alert-box {
+  border: 2px solid #ff0000;
+  background-color: rgba(255, 0, 0, 0.1);
+  padding: 16px;
+  margin-top: 16px;
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 5px #ff0000;
+  }
+  50% {
+    box-shadow: 0 0 20px #ff0000;
+  }
+  100% {
+    box-shadow: 0 0 5px #ff0000;
+  }
+}
+
+/* Typing effect */
+.typing {
+  border-right: 2px solid var(--terminal-green);
+  animation: blink 0.7s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--terminal-green);
+  }
+}
