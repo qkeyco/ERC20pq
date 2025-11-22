@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { OFT } from "@layerzerolabs/oapp-evm/contracts/oft/OFT.sol";
+import { SendParam, MessagingFee, MessagingReceipt, OFTReceipt } from "@layerzerolabs/oapp-evm/contracts/oft/interfaces/IOFT.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IStarkVerifier } from "./interfaces/IStarkVerifier.sol";
 
@@ -63,6 +64,15 @@ contract ERC21PQToken is OFT {
     /// @notice Emitted when disabling ZK guard fails
     event ZKDisableFailed(address indexed account, string reason);
 
+    /// @notice Emitted when a ZK-verified cross-chain send is executed
+    event ZKSend(
+        bytes32 indexed guid,
+        uint32 dstEid,
+        address indexed from,
+        uint256 amountSentLD,
+        uint256 nonce
+    );
+
     // =============================================================
     //                           ERRORS
     // =============================================================
@@ -90,6 +100,9 @@ contract ERC21PQToken is OFT {
 
     /// @notice Thrown when insufficient balance for transfer
     error InsufficientBalance();
+
+    /// @notice Thrown when a guarded address tries to use normal cross-chain send
+    error ZKGuardEnabled_UseSendZK();
 
     // =============================================================
     //                         CONSTRUCTOR
@@ -298,6 +311,125 @@ contract ERC21PQToken is OFT {
         }
 
         super._update(from, to, amount);
+    }
+
+    /// @notice Override _debit to block ZK-guarded accounts from regular send()
+    /// @dev Forces ZK-guarded users to use sendZK() for cross-chain transfers
+    function _debit(
+        address _from,
+        uint256 _amountLD,
+        uint256 _minAmountLD,
+        uint32 _dstEid
+    ) internal virtual override returns (uint256 amountSentLD, uint256 amountReceivedLD) {
+        // Block ZK-guarded accounts from using regular send()
+        if (zkGuardEnabled[_from] && !_zkContextActive) {
+            revert ZKGuardEnabled_UseSendZK();
+        }
+
+        return super._debit(_from, _amountLD, _minAmountLD, _dstEid);
+    }
+
+    // =============================================================
+    //                   CROSS-CHAIN ZK FUNCTIONS
+    // =============================================================
+
+    /// @notice Execute a ZK-verified cross-chain send
+    /// @param _sendParam The parameters for the send operation
+    /// @param _fee The LayerZero messaging fee
+    /// @param _refundAddress The address to receive any excess funds
+    /// @param proof The STARK proof data
+    /// @param publicInputs The public inputs for verification
+    /// @return msgReceipt The LayerZero messaging receipt
+    /// @return oftReceipt The OFT receipt information
+    function sendZK(
+        SendParam calldata _sendParam,
+        MessagingFee calldata _fee,
+        address _refundAddress,
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external payable returns (MessagingReceipt memory msgReceipt, OFTReceipt memory oftReceipt) {
+        address from = msg.sender;
+        address to = address(uint160(uint256(_sendParam.to)));
+        uint256 amount = _sendParam.amountLD;
+
+        // Verify ZK guard is enabled
+        if (!zkGuardEnabled[from]) {
+            revert ZKGuardNotEnabled();
+        }
+
+        // Verify balance
+        if (balanceOf(from) < amount) {
+            revert InsufficientBalance();
+        }
+
+        // Verify STARK proof
+        if (!verifier.verifyProof(proof, publicInputs, programHash)) {
+            revert InvalidProof();
+        }
+
+        // Verify public inputs
+        if (publicInputs.length < 5) {
+            revert InvalidProof();
+        }
+
+        address proofFrom = address(uint160(publicInputs[0]));
+        address proofTo = address(uint160(publicInputs[1]));
+        uint256 proofAmount = publicInputs[2];
+        uint256 proofNonce = publicInputs[3];
+        uint256 proofCommitment = publicInputs[4];
+
+        // Verify inputs match
+        if (proofFrom != from || proofTo != to || proofAmount != amount) {
+            revert InvalidProof();
+        }
+
+        // Verify nonce
+        if (proofNonce != zkNonce[from]) {
+            revert InvalidNonce();
+        }
+
+        // Verify commitment
+        uint256 expectedCommitment = uint256(hdCommitment[from]) % STARK_PRIME;
+        if (proofCommitment != expectedCommitment) {
+            revert InvalidCommitment();
+        }
+
+        // Increment nonce before send (prevents reentrancy)
+        uint256 currentNonce = zkNonce[from];
+        zkNonce[from] += 1;
+
+        // Execute debit in ZK context (burns tokens)
+        _zkContextActive = true;
+        (uint256 amountSentLD, uint256 amountReceivedLD) = _debit(
+            from,
+            _sendParam.amountLD,
+            _sendParam.minAmountLD,
+            _sendParam.dstEid
+        );
+        _zkContextActive = false;
+
+        // Build message and options
+        (bytes memory message, bytes memory options) = _buildMsgAndOptions(_sendParam, amountReceivedLD);
+
+        // Send via LayerZero
+        msgReceipt = _lzSend(_sendParam.dstEid, message, options, _fee, _refundAddress);
+        oftReceipt = OFTReceipt(amountSentLD, amountReceivedLD);
+
+        emit OFTSent(msgReceipt.guid, _sendParam.dstEid, from, amountSentLD, amountReceivedLD);
+        emit ZKSend(msgReceipt.guid, _sendParam.dstEid, from, amountSentLD, currentNonce);
+
+        return (msgReceipt, oftReceipt);
+    }
+
+    /// @notice Get a quote for sendZK() operation
+    /// @param _sendParam The parameters for the send operation
+    /// @param _payInLzToken Flag indicating whether to pay in LZ token
+    /// @return msgFee The calculated LayerZero messaging fee
+    function quoteSendZK(
+        SendParam calldata _sendParam,
+        bool _payInLzToken
+    ) external view returns (MessagingFee memory msgFee) {
+        return this.quoteSend(_sendParam, _payInLzToken);
     }
 
     // =============================================================
