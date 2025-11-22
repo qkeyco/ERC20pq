@@ -103,7 +103,7 @@ function App() {
       // Check network
       const network = await provider.getNetwork();
       if (network.chainId !== 73571n) {
-        setTxStatus(`Wrong network! You're on chain ${network.chainId}. Please switch to Tenderly Fork (73571)`);
+        setTxStatus(`Wrong network (chain ${network.chainId}). Click the globe icon in MetaMask and select "EthereumPQ" (chain 73571)`);
         return;
       }
 
@@ -229,6 +229,17 @@ function App() {
     setLoading(true);
     setTxStatus('Generating ZK proof and sending...');
     try {
+      // Get nonce from contract (dapp has correct network)
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function zkNonce(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+      ], provider);
+      const [nonce, commitment] = await Promise.all([
+        contract.zkNonce(account),
+        contract.hdCommitment(account),
+      ]);
+
       const result = await (window as any).ethereum.request({
         method: 'wallet_invokeSnap',
         params: {
@@ -240,6 +251,8 @@ function App() {
               to: recipient,
               amount: amount,
               from: account,
+              nonce: nonce.toString(),
+              commitment: commitment,
             },
           },
         },
@@ -260,6 +273,17 @@ function App() {
     setLoading(true);
     setTxStatus('Paying for pizza with ZK proof...');
     try {
+      // Get nonce from contract (dapp has correct network)
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function zkNonce(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+      ], provider);
+      const [nonce, commitment] = await Promise.all([
+        contract.zkNonce(account),
+        contract.hdCommitment(account),
+      ]);
+
       const result = await (window as any).ethereum.request({
         method: 'wallet_invokeSnap',
         params: {
@@ -271,6 +295,8 @@ function App() {
               to: MERCHANT_ADDRESS,
               amount: '10', // Pizza price
               from: account,
+              nonce: nonce.toString(),
+              commitment: commitment,
             },
           },
         },

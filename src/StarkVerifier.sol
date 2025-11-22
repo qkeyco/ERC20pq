@@ -69,9 +69,13 @@ contract StarkVerifier is IStarkVerifier {
         require(publicInputs.length == 5, "Expected 5 public inputs");
 
         // Verify inputs are in the STARK field
-        for (uint256 i = 0; i < publicInputs.length; i++) {
+        // Addresses (160 bits) and amounts always fit
+        // Commitment (256 bits) is reduced mod STARK_PRIME by caller
+        for (uint256 i = 0; i < 4; i++) {
             require(publicInputs[i] < STARK_PRIME, "Input exceeds field");
         }
+        // Commitment is the 5th input - verify it's been reduced
+        require(publicInputs[4] < STARK_PRIME, "Commitment must be reduced to field");
 
         // Verify minimum proof size
         // STARK proofs are larger than SNARKs (~100KB vs ~200B)

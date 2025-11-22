@@ -80,6 +80,54 @@ contract DeployScript is Script {
     }
 }
 
+/// @title DeployTenderly
+/// @notice Deploy to Tenderly fork with unlocked accounts
+contract DeployTenderly is Script {
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
+    function run() external {
+        // Use unlocked account for Tenderly
+        address deployer = 0xD32e40436e4F6C892918C6A19AF75bf997cDe0f9;
+        address lzEndpoint = 0x1a44076050125825900e736c501f859c50fE728c;
+
+        console.log("Deploying to Tenderly with account:", deployer);
+
+        vm.startBroadcast(deployer);
+
+        // Deploy STARK verifier
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
+
+        ERC21PQToken token = new ERC21PQToken(
+            "ERC21 PQ Token",
+            "LZPQ",
+            lzEndpoint,
+            deployer,
+            address(verifier),
+            PROGRAM_HASH,
+            1_000_000 * 10 ** 18
+        );
+
+        MockUSD usd = new MockUSD();
+        PizzaMerchant merchant = new PizzaMerchant(address(token), 10 * 10 ** 18);
+        TinyDex dex = new TinyDex(address(token), address(usd), 1 * 10 ** 18);
+
+        // Add liquidity
+        token.approve(address(dex), 100_000 * 10 ** 18);
+        usd.approve(address(dex), 100_000 * 10 ** 18);
+        dex.addLiquidity(100_000 * 10 ** 18, 100_000 * 10 ** 18);
+
+        vm.stopBroadcast();
+
+        console.log("\n=== Tenderly Deployment ===");
+        console.log("Verifier:", address(verifier));
+        console.log("Token:", address(token));
+        console.log("MockUSD:", address(usd));
+        console.log("Merchant:", address(merchant));
+        console.log("DEX:", address(dex));
+        console.log("===========================\n");
+    }
+}
+
 /// @title DeployLocal
 /// @notice Deploy to local Anvil for testing
 contract DeployLocal is Script {

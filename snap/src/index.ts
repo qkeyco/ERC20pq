@@ -32,6 +32,8 @@ interface TransferZKParams {
   to: string;
   amount: string;
   from: string;
+  nonce: string;
+  commitment: string;
 }
 
 // Helper to compute Poseidon hash (simplified - use actual implementation in production)
@@ -40,6 +42,9 @@ async function computeCommitment(hdSecret: string): Promise<string> {
   // For demo, use keccak256 as placeholder
   return ethers.keccak256(ethers.toUtf8Bytes(hdSecret));
 }
+
+// STARK prime field modulus (Cairo field)
+const STARK_PRIME = BigInt('3618502788666131213697322783095070105623107215331596699973092056135872020481');
 
 // Helper to generate STARK proof (simplified - use actual Cairo prover in production)
 async function generateStarkProof(
@@ -53,12 +58,15 @@ async function generateStarkProof(
   // In production, use Cairo prover to generate real STARK proof
   // STARKs are quantum-resistant and don't need trusted setup
 
+  // Reduce commitment to STARK field
+  const commitmentReduced = BigInt(commitment) % STARK_PRIME;
+
   const publicInputs = [
     BigInt(from),           // from address as uint256
     BigInt(to),             // to address as uint256
     amount,                 // amount
     nonce,                  // nonce
-    BigInt(commitment),     // commitment
+    commitmentReduced,      // commitment reduced to STARK field
   ];
 
   // Placeholder STARK proof (1024 bytes - STARKs are larger than SNARKs)
@@ -232,19 +240,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     // Execute ZK transfer
     case 'ethvaultpq_transferZK': {
       const params = request.params as TransferZKParams;
-      if (!params?.tokenAddress || !params?.to || !params?.amount || !params?.from) {
-        throw new Error('Token address, from, recipient, and amount are required');
+      if (!params?.tokenAddress || !params?.to || !params?.amount || !params?.from || !params?.nonce || !params?.commitment) {
+        throw new Error('Token address, from, recipient, amount, nonce, and commitment are required');
       }
 
       // Get HD secret
       const hdSecret = await getHDSecret();
-      const commitment = await computeCommitment(hdSecret);
 
-      // Get nonce from contract
-      const provider = new ethers.BrowserProvider(ethereum as any);
-      const contract = new ethers.Contract(params.tokenAddress, ERC21_ABI, provider);
-      const nonce = await contract.zkNonce(params.from);
+      // Use nonce and commitment passed from dapp (dapp has correct network)
+      const nonce = BigInt(params.nonce);
       const amount = ethers.parseEther(params.amount);
+      const commitment = params.commitment;
 
       // Show confirmation dialog
       const confirmed = await snap.request({
