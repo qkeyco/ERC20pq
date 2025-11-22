@@ -37,7 +37,8 @@
 ### Network Configuration
 - **Network**: Tenderly Fork of Ethereum Mainnet
 - **Chain ID**: 73571
-- **LayerZero Endpoint**: Use appropriate endpoint for Tenderly fork
+- **RPC URL**: https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f
+- **LayerZero Endpoint**: 0x1a44076050125825900e736c501f859c50fE728c (Ethereum Mainnet V2)
 
 ### Snap Deployment
 - Local development: `cd snap && yarn build && yarn start` (serves on port 8080)

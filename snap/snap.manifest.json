@@ -7,7 +7,7 @@
     "url": "https://github.com/erc21pq/snap.git"
   },
   "source": {
-    "shasum": "PLACEHOLDER",
+    "shasum": "xFZUeT915E65/kfjdcDsjavsSblzo60Hr7eilkdPiHs=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -26,5 +26,6 @@
     },
     "endowment:ethereum-provider": {}
   },
+  "platformVersion": "6.24.0",
   "manifestVersion": "0.1"
 }

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Yarn PnP
+.pnp.cjs
+.pnp.loader.mjs
+.yarn/
+
+# Lock files (use one)
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
