@@ -98,8 +98,8 @@ contract DeployTenderly is Script {
         StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
 
         ERC21PQToken token = new ERC21PQToken(
-            "ERC21 PQ Token",
-            "LZPQ",
+            "USD PQ Token",
+            "USDPQ",
             lzEndpoint,
             deployer,
             address(verifier),
@@ -149,8 +149,8 @@ contract DeployLocal is Script {
         StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
 
         ERC21PQToken token = new ERC21PQToken(
-            "ERC21 PQ Token",
-            "LZPQ",
+            "USD PQ Token",
+            "USDPQ",
             lzEndpoint,
             deployer,
             address(verifier),

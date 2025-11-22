@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 
 // ABI for ERC21PQToken contract with STARK verifier
 const ERC21_ABI = [
+  'function setupProtection(bytes32 commitment) external',
   'function bindHD(bytes32 commitment) external',
   'function enableZKGuard() external',
   'function disableZKGuard(bytes calldata proof, uint256[] calldata publicInputs) external',
@@ -113,8 +114,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const iface = new ethers.Interface(ERC21_ABI);
 
   switch (request.method) {
-    // Bind HD commitment to token contract
-    case 'ethvaultpq_bindHD': {
+    // Setup protection in one transaction (bind + enable)
+    case 'ethvaultpq_setupProtection': {
       const params = request.params as BindHDParams;
       if (!params?.tokenAddress) {
         throw new Error('Token address is required');
@@ -131,6 +132,46 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           type: 'confirmation',
           content: panel([
             heading('Setup Quantum Protection'),
+            text('This creates your quantum-resistant key and enables protection.'),
+            text('Your secret is stored safely in this Snap.'),
+            copyable(commitment.slice(0, 20) + '...'),
+            text('Only you can authorize transfers after this.'),
+          ]),
+        },
+      });
+
+      if (!confirmed) {
+        throw new Error('User rejected the request');
+      }
+
+      // Encode transaction data for combined function
+      const data = iface.encodeFunctionData('setupProtection', [commitment]);
+
+      return {
+        to: params.tokenAddress,
+        data,
+        commitment,
+      };
+    }
+
+    // Bind HD commitment to token contract (legacy)
+    case 'ethvaultpq_bindHD': {
+      const params = request.params as BindHDParams;
+      if (!params?.tokenAddress) {
+        throw new Error('Token address is required');
+      }
+
+      // Get or create HD secret
+      const hdSecret = await getHDSecret();
+      const commitment = await computeCommitment(hdSecret);
+
+      // Show confirmation dialog
+      const confirmed = await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'confirmation',
+          content: panel([
+            heading('Bind HD Commitment'),
             text('This creates your secure quantum-resistant key.'),
             text('Your secret is stored safely in this Snap.'),
             copyable(commitment.slice(0, 20) + '...'),
@@ -252,24 +293,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       const amount = ethers.parseEther(params.amount);
       const commitment = params.commitment;
 
-      // Show confirmation dialog
-      const confirmed = await snap.request({
-        method: 'snap_dialog',
-        params: {
-          type: 'confirmation',
-          content: panel([
-            heading('ZK Transfer'),
-            text(`Send ${params.amount} tokens using ZK proof`),
-            text(`To: ${params.to}`),
-            text(`Nonce: ${nonce.toString()}`),
-            text('Your HD secret remains private.'),
-          ]),
-        },
-      });
-
-      if (!confirmed) {
-        throw new Error('User rejected the request');
-      }
+      // Skip Snap confirmation - MetaMask will confirm the transaction
 
       // Generate STARK proof (quantum-resistant)
       const { proof, publicInputs } = await generateStarkProof(

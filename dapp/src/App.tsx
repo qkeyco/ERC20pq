@@ -6,8 +6,8 @@ import detectEthereumProvider from '@metamask/detect-provider';
 const SNAP_ID = 'local:http://localhost:8080';
 
 // Contract addresses - Tenderly Fork (Chain ID: 73571)
-const TOKEN_ADDRESS = '0x011b5b823663C76dc70411C2be32124372464575';
-const MERCHANT_ADDRESS = '0x242f9504864776Be37752050EdA0F4ac33a565C4';
+const TOKEN_ADDRESS = '0xD88c84758f5368F37630f2E909b9616e3e3a9867';
+const MERCHANT_ADDRESS = '0xa5fC94b6DA4afAC5ec2f81def47F46edCB8A344C';
 
 interface AccountInfo {
   address: string;
@@ -148,23 +148,36 @@ function App() {
     return txHash;
   };
 
-  // Bind HD Commitment
-  const bindHD = async () => {
+  // Wait for transaction to be mined
+  const waitForTx = async (txHash: string) => {
+    const provider = new ethers.BrowserProvider((window as any).ethereum);
+    let receipt = null;
+    while (!receipt) {
+      receipt = await provider.getTransactionReceipt(txHash);
+      if (!receipt) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    return receipt;
+  };
+
+  // Setup Quantum Protection (single transaction)
+  const setupProtection = async () => {
     setLoading(true);
-    setTxStatus('Binding HD commitment...');
+    setTxStatus('Setting up quantum protection...');
     try {
       const result = await (window as any).ethereum.request({
         method: 'wallet_invokeSnap',
         params: {
           snapId: SNAP_ID,
           request: {
-            method: 'ethvaultpq_bindHD',
+            method: 'ethvaultpq_setupProtection',
             params: { tokenAddress: TOKEN_ADDRESS },
           },
         },
       });
       const txHash = await sendSnapTx(result);
-      setTxStatus(`Commitment bound! Tx: ${txHash.slice(0, 10)}...`);
+      setTxStatus(`Protection enabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -258,6 +271,11 @@ function App() {
         },
       });
       const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+
+      // Wait for confirmation
+      await waitForTx(txHash);
+
       setTxStatus(`Transfer successful! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
       setRecipient('');
@@ -302,6 +320,11 @@ function App() {
         },
       });
       const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+
+      // Wait for confirmation
+      await waitForTx(txHash);
+
       setTxStatus(`Pizza paid! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
@@ -343,7 +366,7 @@ function App() {
                   <div className="mt-3 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Balance:</span>
-                      <span className="font-semibold text-lg">{parseFloat(accountInfo.balance).toFixed(2)} LZPQ</span>
+                      <span className="font-semibold text-lg">{parseFloat(accountInfo.balance).toFixed(2)} USDPQ</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Protection:</span>
@@ -385,7 +408,7 @@ function App() {
                 {/* Setup quantum protection if no commitment yet */}
                 {accountInfo && accountInfo.commitment === '0x0000000000000000000000000000000000000000000000000000000000000000' && (
                   <button
-                    onClick={bindHD}
+                    onClick={setupProtection}
                     disabled={loading}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                   >
@@ -449,7 +472,7 @@ function App() {
                   disabled={loading}
                   className="w-full bg-yellow-500 text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition disabled:opacity-50"
                 >
-                  {loading ? 'Processing...' : '🍕 Pay Pizza (10 LZPQ)'}
+                  {loading ? 'Processing...' : '🍕 Pay Pizza (10 USDPQ)'}
                 </button>
               </div>
 

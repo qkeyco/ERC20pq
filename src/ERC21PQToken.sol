@@ -119,6 +119,21 @@ contract ERC21PQToken is OFT {
     //                      ZK GUARD FUNCTIONS
     // =============================================================
 
+    /// @notice Setup quantum protection in one transaction (bind + enable)
+    /// @param commitment The hash of the caller's HD secret
+    /// @dev Combines bindHD and enableZKGuard into single call
+    function setupProtection(bytes32 commitment) external {
+        if (hdCommitment[msg.sender] != bytes32(0)) {
+            revert CommitmentAlreadyBound();
+        }
+
+        hdCommitment[msg.sender] = commitment;
+        zkGuardEnabled[msg.sender] = true;
+
+        emit HDCommitmentBound(msg.sender, commitment);
+        emit ZKGuardEnabled(msg.sender);
+    }
+
     /// @notice Bind an HD commitment to the caller's address
     /// @param commitment The hash of the caller's HD secret
     /// @dev Can only be set once per address
