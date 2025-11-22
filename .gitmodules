@@ -1,0 +1,3 @@
+[submodule "EthVaultPQ"]
+	path = EthVaultPQ
+	url = https://github.com/qkeyco/EthVaultPQ
