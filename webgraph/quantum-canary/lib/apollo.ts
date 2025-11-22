@@ -1,7 +1,8 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
+// Use proxy route to avoid mixed content blocking (HTTPS -> HTTP)
 const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_SUBGRAPH_URL || 'http://157.245.7.229:8000/subgraphs/name/ethereum-basic-event-handlers',
+  uri: '/api/graphql', // Proxy to HTTP subgraph server-side
 });
 
 export const apolloClient = new ApolloClient({
