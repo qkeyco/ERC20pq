@@ -21,7 +21,9 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
     "start": "mm-snap watch",
-    "test": "jest"
+    "serve": "mm-snap serve",
+    "test": "jest",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@metamask/snaps-sdk": "^6.0.0",
