@@ -81,7 +81,7 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_getInfo',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: TOKEN_ADDRESS, address: account },
           },
         },
       });
@@ -89,6 +89,19 @@ function App() {
     } catch (error) {
       console.error('Failed to get info:', error);
     }
+  };
+
+  // Helper to send transaction from Snap result
+  const sendSnapTx = async (result: { to: string; data: string }) => {
+    const txHash = await (window as any).ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: account,
+        to: result.to,
+        data: result.data,
+      }],
+    });
+    return txHash;
   };
 
   // Bind HD Commitment
@@ -106,7 +119,8 @@ function App() {
           },
         },
       });
-      setTxStatus(`Commitment bound! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Commitment bound! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -129,7 +143,8 @@ function App() {
           },
         },
       });
-      setTxStatus(`ZK guard enabled! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard enabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -148,11 +163,12 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_disableZKGuard',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: TOKEN_ADDRESS, from: account },
           },
         },
       });
-      setTxStatus(`ZK guard disabled! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`ZK guard disabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -179,11 +195,13 @@ function App() {
               tokenAddress: TOKEN_ADDRESS,
               to: recipient,
               amount: amount,
+              from: account,
             },
           },
         },
       });
-      setTxStatus(`Transfer successful! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Transfer successful! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
       setRecipient('');
       setAmount('');
@@ -208,11 +226,13 @@ function App() {
               tokenAddress: TOKEN_ADDRESS,
               to: MERCHANT_ADDRESS,
               amount: '10', // Pizza price
+              from: account,
             },
           },
         },
       });
-      setTxStatus(`Pizza paid! Tx: ${result.txHash.slice(0, 10)}...`);
+      const txHash = await sendSnapTx(result);
+      setTxStatus(`Pizza paid! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
       setTxStatus(`Error: ${error.message}`);
@@ -287,29 +307,41 @@ function App() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <button
-                  onClick={bindHD}
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Bind HD Commitment'}
-                </button>
+                {/* Setup quantum protection if no commitment yet */}
+                {accountInfo && accountInfo.commitment === '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <button
+                    onClick={bindHD}
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Setting up...' : '🔐 Setup Quantum Protection'}
+                  </button>
+                )}
 
-                <button
-                  onClick={enableGuard}
-                  disabled={loading}
-                  className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Enable Quantum Lock'}
-                </button>
-
-                <button
-                  onClick={disableGuard}
-                  disabled={loading}
-                  className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Disable Quantum Lock'}
-                </button>
+                {/* Quantum Lock Toggle */}
+                {accountInfo && accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold">Quantum Lock</div>
+                      <div className="text-sm text-gray-500">
+                        {accountInfo.isGuarded ? 'Protected with STARK proofs' : 'Standard transfers enabled'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={accountInfo.isGuarded ? disableGuard : enableGuard}
+                      disabled={loading}
+                      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                        accountInfo.isGuarded ? 'bg-green-500' : 'bg-gray-300'
+                      } ${loading ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                          accountInfo.isGuarded ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
 
                 {/* PQ Send Form */}
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
