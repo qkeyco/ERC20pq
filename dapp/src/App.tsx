@@ -37,10 +37,29 @@ function App() {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
         }
+
+        // Check if Snap is already installed
+        try {
+          const snaps = await (window as any).ethereum.request({
+            method: 'wallet_getSnaps',
+          });
+          if (snaps[SNAP_ID]) {
+            setSnapInstalled(true);
+          }
+        } catch (e) {
+          console.log('Could not check snaps');
+        }
       }
     };
     init();
   }, []);
+
+  // Auto-refresh info when account changes
+  useEffect(() => {
+    if (account && snapInstalled) {
+      refreshInfo();
+    }
+  }, [account, snapInstalled]);
 
   // Connect wallet
   const connectWallet = async () => {
@@ -71,23 +90,48 @@ function App() {
     }
   };
 
-  // Get account info
+  // Get account info directly from contract (no Snap needed)
   const refreshInfo = async () => {
-    if (!account) return;
+    if (!account) {
+      setTxStatus('Please connect wallet first');
+      return;
+    }
+    setTxStatus('Loading account info...');
     try {
-      const result = await (window as any).ethereum.request({
-        method: 'wallet_invokeSnap',
-        params: {
-          snapId: SNAP_ID,
-          request: {
-            method: 'ethvaultpq_getInfo',
-            params: { tokenAddress: TOKEN_ADDRESS, address: account },
-          },
-        },
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+
+      // Check network
+      const network = await provider.getNetwork();
+      if (network.chainId !== 73571n) {
+        setTxStatus(`Wrong network! You're on chain ${network.chainId}. Please switch to Tenderly Fork (73571)`);
+        return;
+      }
+
+      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+        'function balanceOf(address) view returns (uint256)',
+        'function hdCommitment(address) view returns (bytes32)',
+        'function zkNonce(address) view returns (uint256)',
+        'function zkGuardEnabled(address) view returns (bool)',
+      ], provider);
+
+      const [balance, commitment, nonce, isGuarded] = await Promise.all([
+        contract.balanceOf(account),
+        contract.hdCommitment(account),
+        contract.zkNonce(account),
+        contract.zkGuardEnabled(account),
+      ]);
+
+      setAccountInfo({
+        address: account,
+        balance: ethers.formatEther(balance),
+        commitment,
+        nonce: nonce.toString(),
+        isGuarded,
       });
-      setAccountInfo(result);
-    } catch (error) {
+      setTxStatus('');
+    } catch (error: any) {
       console.error('Failed to get info:', error);
+      setTxStatus(`Error: ${error.message || 'Failed to load info'}`);
     }
   };
 
@@ -267,24 +311,29 @@ function App() {
             <>
               {/* Account Info */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-500">Connected</div>
-                <div className="font-mono text-sm truncate">{account}</div>
-                {accountInfo && (
-                  <div className="mt-3 space-y-1">
-                    <div className="flex justify-between">
+                <div className="text-sm text-gray-500">Your Wallet</div>
+                <div className="font-mono text-xs truncate text-gray-600">{account}</div>
+                {accountInfo ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Balance:</span>
-                      <span className="font-semibold">{accountInfo.balance} LZPQ</span>
+                      <span className="font-semibold text-lg">{parseFloat(accountInfo.balance).toFixed(2)} LZPQ</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">ZK Guard:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Protection:</span>
                       <span className={accountInfo.isGuarded ? 'text-green-600 font-semibold' : 'text-gray-400'}>
-                        {accountInfo.isGuarded ? '🔒 Enabled' : 'Disabled'}
+                        {accountInfo.isGuarded ? '🔒 Quantum Lock ON' : '🔓 Standard Mode'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Nonce:</span>
-                      <span>{accountInfo.nonce}</span>
-                    </div>
+                    {accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                      <div className="text-xs text-gray-400">
+                        Transfers: {accountInfo.nonce}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-gray-500">
+                    Click Refresh to load your balance
                   </div>
                 )}
                 <button
