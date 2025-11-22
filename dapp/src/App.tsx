@@ -16,10 +16,10 @@ const NETWORKS = {
   },
   'tenderly-base': {
     name: 'Tenderly Base',
-    chainId: '0x2105', // 8453
-    rpcUrl: 'https://virtual.base.us-west.rpc.tenderly.co/faa3abed-5400-4dc8-87ec-6091314a56cf',
-    token: '0x420366e5f35d53a2c0E3192f0C8fc6449509C875',
-    merchant: '0x4eE979DDDb05523A85C40795c0389B9e08e3c693',
+    chainId: '0x210E', // 8462
+    rpcUrl: 'https://virtual.base.eu.rpc.tenderly.co/18d3110d-0934-4f12-b889-58fa6fa45d72',
+    token: '0x0D16B604602D7081E5DD9f0A1fAD79a9A31782fC',
+    merchant: '0xcc164852578C2f4972926c1f8B31b660b3627b16',
   },
 };
 
