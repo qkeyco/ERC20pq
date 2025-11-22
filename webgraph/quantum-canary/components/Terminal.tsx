@@ -54,28 +54,55 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
     fitAddonRef.current = fitAddon;
 
     // Boot sequence
-    const bootMessages = [
-      'Initializing Quantum Canary...',
-      'Loading quantum-resistant protocols...',
-      'ECC Integrity: 100%',
-      'Connected to Tenderly ETH Virtual Network',
-      'Chain ID: 73571',
-      '',
-      'Type "help" for available commands.',
-      '',
-    ];
+    const runBootSequence = async () => {
+      // Initial loading message
+      term.writeln('Initializing Quantum Canary...');
 
-    let delay = 0;
-    bootMessages.forEach((msg) => {
-      setTimeout(() => {
+      // Wait a moment, then load ASCII art
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      try {
+        // Fetch ASCII art
+        const response = await fetch('/images/ascii-art.txt');
+        const asciiArt = await response.text();
+
+        // Display ASCII art all at once
+        const lines = asciiArt.split('\n');
+        lines.forEach(line => {
+          term.writeln(line);
+        });
+
+        // Wait a moment before showing status
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (error) {
+        console.error('Failed to load ASCII art:', error);
+      }
+
+      // Connection status messages
+      const statusMessages = [
+        '',
+        'Loading quantum-resistant protocols...',
+        'ECC Integrity: 100%',
+        'Connected to Multi-Chain Network',
+        '  └─ ETH Chain ID: 73571',
+        '  └─ BASE Chain ID: 8453',
+        '',
+        'System Status: ALL SYSTEMS GO',
+        '',
+        'Type "help" for available commands.',
+        '',
+      ];
+
+      for (const msg of statusMessages) {
         term.writeln(msg);
-      }, delay);
-      delay += 150;
-    });
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
 
-    setTimeout(() => {
+      // Ready for input
       term.write('quantum-canary> ');
-    }, delay);
+    };
+
+    runBootSequence();
 
     // Handle input
     let inputBuffer = '';
