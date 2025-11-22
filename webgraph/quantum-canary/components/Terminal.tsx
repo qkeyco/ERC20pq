@@ -57,30 +57,50 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
     const runBootSequence = async () => {
       // Initial loading message
       term.writeln('Initializing Quantum Canary...');
-
-      // Wait a moment, then load ASCII art
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       try {
         // Fetch ASCII art
         const response = await fetch('/images/ascii-art.txt');
         const asciiArt = await response.text();
-
-        // Display ASCII art all at once
         const lines = asciiArt.split('\n');
-        lines.forEach(line => {
-          term.writeln(line);
-        });
 
-        // Wait a moment before showing status
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Add blank lines at the start so the bird starts from bottom
+        const terminalHeight = term.rows;
+        const blankLinesBefore = terminalHeight;
+
+        // Print blank lines to position bird at bottom
+        for (let i = 0; i < blankLinesBefore; i++) {
+          term.writeln('');
+        }
+
+        // Scroll the ASCII art up into view and then off screen
+        // Print lines with a delay to create smooth scrolling
+        for (const line of lines) {
+          term.writeln(line);
+          await new Promise(resolve => setTimeout(resolve, 30)); // Fast scroll speed
+        }
+
+        // Continue scrolling to push bird off the top
+        const blankLinesAfter = terminalHeight + 5;
+        for (let i = 0; i < blankLinesAfter; i++) {
+          term.writeln('');
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
+
+        // Brief pause before status messages
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
         console.error('Failed to load ASCII art:', error);
       }
 
+      // Clear screen effect by printing blank lines
+      term.clear();
+
       // Connection status messages
       const statusMessages = [
         '',
+        'Initializing Quantum Canary...',
         'Loading quantum-resistant protocols...',
         'ECC Integrity: 100%',
         'Connected to Multi-Chain Network',
