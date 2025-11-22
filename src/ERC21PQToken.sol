@@ -125,7 +125,6 @@ contract ERC21PQToken is OFT {
 
     /// @notice Enable ZK guard for the caller's address
     /// @dev Requires an HD commitment to be bound first
-    /// @dev This is one-way for demo purposes - cannot be disabled
     function enableZKGuard() external {
         if (hdCommitment[msg.sender] == bytes32(0)) {
             revert NoCommitmentBound();
@@ -135,11 +134,41 @@ contract ERC21PQToken is OFT {
         emit ZKGuardEnabled(msg.sender);
     }
 
+    /// @notice Disable ZK guard (requires STARK proof of ownership)
+    /// @param proof The STARK proof proving ownership of HD secret
+    /// @param publicInputs Public inputs for verification
+    function disableZKGuard(
+        bytes calldata proof,
+        uint256[] calldata publicInputs
+    ) external {
+        if (!zkGuardEnabled[msg.sender]) {
+            revert ZKGuardNotEnabled();
+        }
+
+        // Verify STARK proof to prove ownership
+        if (!verifier.verifyProof(proof, publicInputs, programHash)) {
+            revert InvalidProof();
+        }
+
+        // Verify the proof is for this address
+        require(publicInputs.length >= 5, "Invalid public inputs");
+        require(address(uint160(publicInputs[0])) == msg.sender, "Proof not for sender");
+
+        // Verify commitment matches
+        bytes32 proofCommitment = bytes32(publicInputs[4]);
+        if (proofCommitment != hdCommitment[msg.sender]) {
+            revert InvalidCommitment();
+        }
+
+        zkGuardEnabled[msg.sender] = false;
+        emit ZKGuardDisabled(msg.sender);
+    }
+
     /// @notice Execute a ZK-verified transfer
     /// @param from The address to transfer from
     /// @param to The recipient address
     /// @param amount The amount to transfer
-    /// @param proof The SNARK proof data
+    /// @param proof The STARK proof data (quantum-resistant)
     /// @param publicInputs The public inputs (from, to, amount, nonce, commitment)
     /// @return success True if transfer succeeded
     function transferZK(
@@ -159,8 +188,8 @@ contract ERC21PQToken is OFT {
             revert InsufficientBalance();
         }
 
-        // Verify SNARK proof
-        if (!verifier.verifyProof(proof, publicInputs)) {
+        // Verify STARK proof (quantum-resistant)
+        if (!verifier.verifyProof(proof, publicInputs, programHash)) {
             revert InvalidProof();
         }
 

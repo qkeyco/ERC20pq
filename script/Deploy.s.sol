@@ -3,14 +3,17 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import { ERC21PQToken } from "../src/ERC21PQToken.sol";
-import { Groth16Verifier } from "../src/Groth16Verifier.sol";
+import { StarkVerifier } from "../src/StarkVerifier.sol";
 import { PizzaMerchant } from "../src/demos/PizzaMerchant.sol";
 import { TinyDex } from "../src/demos/TinyDex.sol";
 import { MockUSD } from "../src/mocks/MockUSD.sol";
 
 /// @title DeployScript
-/// @notice Deploys all ERC-21 contracts to testnet
+/// @notice Deploys all ERC-21 contracts to testnet with STARK verifier
 contract DeployScript is Script {
+    // Program hash for HD commitment verification
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
     function run() external {
         // Get deployer from environment
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -24,9 +27,9 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // 1. Deploy Groth16 Verifier
-        Groth16Verifier verifier = new Groth16Verifier();
-        console.log("Groth16Verifier deployed at:", address(verifier));
+        // 1. Deploy STARK Verifier (quantum-resistant)
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
+        console.log("StarkVerifier deployed at:", address(verifier));
 
         // 2. Deploy ERC21PQToken
         uint256 initialSupply = 1_000_000 * 10 ** 18; // 1M tokens
@@ -36,6 +39,7 @@ contract DeployScript is Script {
             lzEndpoint,
             deployer,
             address(verifier),
+            PROGRAM_HASH,
             initialSupply
         );
         console.log("ERC21PQToken deployed at:", address(token));
@@ -79,6 +83,8 @@ contract DeployScript is Script {
 /// @title DeployLocal
 /// @notice Deploy to local Anvil for testing
 contract DeployLocal is Script {
+    bytes32 constant PROGRAM_HASH = keccak256("hd_commitment_v1");
+
     function run() external {
         // Use default Anvil account
         uint256 deployerPrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
@@ -91,8 +97,8 @@ contract DeployLocal is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy all contracts
-        Groth16Verifier verifier = new Groth16Verifier();
+        // Deploy STARK verifier
+        StarkVerifier verifier = new StarkVerifier(PROGRAM_HASH);
 
         ERC21PQToken token = new ERC21PQToken(
             "ERC21 PQ Token",
@@ -100,6 +106,7 @@ contract DeployLocal is Script {
             lzEndpoint,
             deployer,
             address(verifier),
+            PROGRAM_HASH,
             1_000_000 * 10 ** 18
         );
 

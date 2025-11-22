@@ -3,25 +3,28 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import { ERC21PQToken } from "../src/ERC21PQToken.sol";
-import { Groth16Verifier } from "../src/Groth16Verifier.sol";
+import { MockStarkVerifier } from "../src/mocks/MockStarkVerifier.sol";
 import { PizzaMerchant } from "../src/demos/PizzaMerchant.sol";
 import { TinyDex } from "../src/demos/TinyDex.sol";
 import { MockUSD } from "../src/mocks/MockUSD.sol";
 import { MockLzEndpoint } from "../src/mocks/MockLzEndpoint.sol";
 
 /// @title ERC21PQTokenTest
-/// @notice Comprehensive tests for ERC-21 ZK-guarded token
+/// @notice Comprehensive tests for ERC-21 ZK-guarded token with STARK proofs
 contract ERC21PQTokenTest is Test {
     // =============================================================
     //                         CONTRACTS
     // =============================================================
 
     ERC21PQToken public token;
-    Groth16Verifier public verifier;
+    MockStarkVerifier public verifier;
     PizzaMerchant public merchant;
     TinyDex public dex;
     MockUSD public usd;
     MockLzEndpoint public lzEndpoint;
+
+    // Program hash for HD commitment verification
+    bytes32 public constant PROGRAM_HASH = keccak256("hd_commitment_v1");
 
     // =============================================================
     //                         ADDRESSES
@@ -42,8 +45,8 @@ contract ERC21PQTokenTest is Test {
         // Deploy mock LZ endpoint
         lzEndpoint = new MockLzEndpoint();
 
-        // Deploy verifier
-        verifier = new Groth16Verifier();
+        // Deploy STARK verifier
+        verifier = new MockStarkVerifier(PROGRAM_HASH);
 
         // Deploy token with initial supply
         token = new ERC21PQToken(
@@ -52,6 +55,7 @@ contract ERC21PQTokenTest is Test {
             address(lzEndpoint),
             owner,
             address(verifier),
+            PROGRAM_HASH,
             1_000_000 * 10 ** 18
         );
 
@@ -190,7 +194,7 @@ contract ERC21PQTokenTest is Test {
         publicInputs[4] = uint256(commitment);
 
         // Create a non-zero proof (placeholder verifier accepts non-zero proofs)
-        bytes memory proof = new bytes(256);
+        bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
         // Execute ZK transfer
@@ -205,7 +209,7 @@ contract ERC21PQTokenTest is Test {
     function test_TransferZK_RevertIfNotGuarded() public {
         // Try to use transferZK without enabling guard
         uint256[] memory publicInputs = new uint256[](5);
-        bytes memory proof = new bytes(256);
+        bytes memory proof = new bytes(1024);
 
         vm.expectRevert(ERC21PQToken.ZKGuardNotEnabled.selector);
         token.transferZK(alice, bob, 100 * 10 ** 18, proof, publicInputs);
@@ -228,7 +232,7 @@ contract ERC21PQTokenTest is Test {
         publicInputs[3] = 1; // Wrong nonce (should be 0)
         publicInputs[4] = uint256(commitment);
 
-        bytes memory proof = new bytes(256);
+        bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
         vm.expectRevert(ERC21PQToken.InvalidNonce.selector);
@@ -288,7 +292,7 @@ contract ERC21PQTokenTest is Test {
         publicInputs[3] = 0;
         publicInputs[4] = uint256(commitment);
 
-        bytes memory proof = new bytes(256);
+        bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
         // Execute ZK transfer to merchant
@@ -319,7 +323,7 @@ contract ERC21PQTokenTest is Test {
         publicInputs[3] = 0;
         publicInputs[4] = uint256(commitment);
 
-        bytes memory proof = new bytes(256);
+        bytes memory proof = new bytes(1024);
         proof[0] = 0x01;
 
         // First transfer to DEX using ZK
