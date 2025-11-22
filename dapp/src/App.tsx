@@ -5,9 +5,9 @@ import detectEthereumProvider from '@metamask/detect-provider';
 // Snap ID - update with actual published snap ID
 const SNAP_ID = 'local:http://localhost:8080';
 
-// Contract addresses - update after deployment
-const TOKEN_ADDRESS = '0x0000000000000000000000000000000000000000';
-const MERCHANT_ADDRESS = '0x0000000000000000000000000000000000000000';
+// Contract addresses - Tenderly Fork (Chain ID: 73571)
+const TOKEN_ADDRESS = '0x011b5b823663C76dc70411C2be32124372464575';
+const MERCHANT_ADDRESS = '0x242f9504864776Be37752050EdA0F4ac33a565C4';
 
 interface AccountInfo {
   address: string;
