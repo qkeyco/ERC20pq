@@ -5,9 +5,25 @@ import detectEthereumProvider from '@metamask/detect-provider';
 // Snap ID - update with actual published snap ID
 const SNAP_ID = 'local:http://localhost:8080';
 
-// Contract addresses - Tenderly Fork (Chain ID: 73571)
-const TOKEN_ADDRESS = '0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC';
-const MERCHANT_ADDRESS = '0x056cb77995eC5ef2da35CfD02a547058c6D14d84';
+// Network configurations
+const NETWORKS = {
+  'tenderly-eth': {
+    name: 'Tenderly Ethereum',
+    chainId: '0x11F63', // 73571
+    rpcUrl: 'https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f',
+    token: '0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC',
+    merchant: '0x056cb77995eC5ef2da35CfD02a547058c6D14d84',
+  },
+  'tenderly-base': {
+    name: 'Tenderly Base',
+    chainId: '0x2105', // 8453
+    rpcUrl: 'https://virtual.base.us-west.rpc.tenderly.co/faa3abed-5400-4dc8-87ec-6091314a56cf',
+    token: '0x420366e5f35d53a2c0E3192f0C8fc6449509C875',
+    merchant: '0x4eE979DDDb05523A85C40795c0389B9e08e3c693',
+  },
+};
+
+type NetworkKey = keyof typeof NETWORKS;
 
 interface AccountInfo {
   address: string;
@@ -25,6 +41,47 @@ function App() {
   const [txStatus, setTxStatus] = useState<string>('');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>('tenderly-eth');
+
+  // Get current network config - use functions to always get fresh values
+  const getTokenAddress = () => NETWORKS[selectedNetwork].token;
+  const getMerchantAddress = () => NETWORKS[selectedNetwork].merchant;
+
+  // Switch network in MetaMask
+  const switchNetwork = async (networkKey: NetworkKey) => {
+    const netConfig = NETWORKS[networkKey];
+    try {
+      await (window as any).ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: netConfig.chainId }],
+      });
+      setSelectedNetwork(networkKey);
+      setTxStatus(`Switched to ${netConfig.name}`);
+    } catch (switchError: any) {
+      // Chain not added, add it
+      if (switchError.code === 4902) {
+        try {
+          await (window as any).ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: netConfig.chainId,
+              chainName: netConfig.name,
+              rpcUrls: [netConfig.rpcUrl],
+              nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+            }],
+          });
+          setSelectedNetwork(networkKey);
+          setTxStatus(`Added and switched to ${netConfig.name}`);
+        } catch (addError) {
+          console.error('Failed to add network:', addError);
+          setTxStatus('Failed to add network');
+        }
+      } else {
+        console.error('Failed to switch network:', switchError);
+        setTxStatus('Failed to switch network');
+      }
+    }
+  };
 
   // Check if MetaMask is installed and connect
   useEffect(() => {
@@ -54,12 +111,12 @@ function App() {
     init();
   }, []);
 
-  // Auto-refresh info when account changes
+  // Auto-refresh info when account or network changes
   useEffect(() => {
     if (account && snapInstalled) {
       refreshInfo();
     }
-  }, [account, snapInstalled]);
+  }, [account, snapInstalled, selectedNetwork]);
 
   // Connect wallet
   const connectWallet = async () => {
@@ -107,7 +164,7 @@ function App() {
         return;
       }
 
-      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+      const contract = new ethers.Contract(getTokenAddress(), [
         'function balanceOf(address) view returns (uint256)',
         'function hdCommitment(address) view returns (bytes32)',
         'function zkNonce(address) view returns (uint256)',
@@ -172,7 +229,7 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_setupProtection',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: getTokenAddress() },
           },
         },
       });
@@ -196,7 +253,7 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_enableZKGuard',
-            params: { tokenAddress: TOKEN_ADDRESS },
+            params: { tokenAddress: getTokenAddress() },
           },
         },
       });
@@ -220,7 +277,7 @@ function App() {
           snapId: SNAP_ID,
           request: {
             method: 'ethvaultpq_disableZKGuard',
-            params: { tokenAddress: TOKEN_ADDRESS, from: account },
+            params: { tokenAddress: getTokenAddress(), from: account },
           },
         },
       });
@@ -244,7 +301,7 @@ function App() {
     try {
       // Get nonce from contract (dapp has correct network)
       const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+      const contract = new ethers.Contract(getTokenAddress(), [
         'function zkNonce(address) view returns (uint256)',
         'function hdCommitment(address) view returns (bytes32)',
       ], provider);
@@ -260,7 +317,7 @@ function App() {
           request: {
             method: 'ethvaultpq_transferZK',
             params: {
-              tokenAddress: TOKEN_ADDRESS,
+              tokenAddress: getTokenAddress(),
               to: recipient,
               amount: amount,
               from: account,
@@ -294,13 +351,13 @@ function App() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
 
-      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+      const contract = new ethers.Contract(getTokenAddress(), [
         'function transfer(address to, uint256 amount) returns (bool)',
       ], signer);
 
       // Try regular transfer - this will fail if ZK guard is enabled
       // Force send with manual gas limit to bypass estimation and show MetaMask confirmation
-      const tx = await contract.transfer(MERCHANT_ADDRESS, ethers.parseEther('100'), {
+      const tx = await contract.transfer(getMerchantAddress(), ethers.parseEther('100'), {
         gasLimit: 100000,
       });
       await tx.wait();
@@ -323,7 +380,7 @@ function App() {
     try {
       // Get nonce from contract (dapp has correct network)
       const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const contract = new ethers.Contract(TOKEN_ADDRESS, [
+      const contract = new ethers.Contract(getTokenAddress(), [
         'function zkNonce(address) view returns (uint256)',
         'function hdCommitment(address) view returns (bytes32)',
       ], provider);
@@ -339,8 +396,8 @@ function App() {
           request: {
             method: 'ethvaultpq_transferZK',
             params: {
-              tokenAddress: TOKEN_ADDRESS,
-              to: MERCHANT_ADDRESS,
+              tokenAddress: getTokenAddress(),
+              to: getMerchantAddress(),
               amount: '10', // Pizza price
               from: account,
               nonce: nonce.toString(),
@@ -374,6 +431,21 @@ function App() {
           <p className="text-white/80">
             Quantum-resistant ownership with ZK proofs
           </p>
+        </div>
+
+        {/* Network Selector */}
+        <div className="mb-4 flex justify-center">
+          <select
+            value={selectedNetwork}
+            onChange={(e) => switchNetwork(e.target.value as NetworkKey)}
+            className="bg-white/10 text-white border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            {Object.entries(NETWORKS).map(([key, net]) => (
+              <option key={key} value={key} className="text-gray-900">
+                {net.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Main Card */}
