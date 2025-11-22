@@ -4,9 +4,10 @@ schema:
 dataSources:
   - kind: ethereum
     name: ERC21PQToken
-    network: base
+    network: mainnet
     source:
-      # ERC21PQToken deployed on Base (Chain ID: 8453)
+      # ERC21PQToken deployed on Tenderly Base Fork (Chain ID: 8453)
+      # Using 'mainnet' network label because Graph Node uses same Tenderly RPC
       address: '0xfc663c1c06764c9ecfcbf26444bd2e69068f8130'
       abi: ERC21PQToken
       # Starting from block 0

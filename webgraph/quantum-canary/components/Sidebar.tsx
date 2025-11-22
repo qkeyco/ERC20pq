@@ -60,14 +60,22 @@ export default function Sidebar({ commandResult }: SidebarProps) {
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {commandResult.data.map((item: any, idx: number) => (
                     <div key={idx} className="border-l-2 border-terminal-green pl-2">
-                      {Object.entries(item).map(([key, value]) => (
-                        <div key={key}>
-                          <span className="opacity-70">{key}:</span>{' '}
-                          <span className="break-all">
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </span>
+                      {item.chain && (
+                        <div className="mb-1">
+                          <span className="font-bold text-terminal-green">[{item.chain}]</span>
                         </div>
-                      ))}
+                      )}
+                      {Object.entries(item).map(([key, value]) => {
+                        if (key === 'chain') return null; // Skip chain since we display it above
+                        return (
+                          <div key={key}>
+                            <span className="opacity-70">{key}:</span>{' '}
+                            <span className="break-all">
+                              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
@@ -81,14 +89,17 @@ export default function Sidebar({ commandResult }: SidebarProps) {
           <h3 className="font-bold mb-2">NETWORK STATUS</h3>
           <div className="text-sm space-y-1">
             <div>
-              <span className="opacity-70">Network:</span>{' '}
-              <span className="status-success">Tenderly ETH</span>
+              <span className="opacity-70">Monitoring:</span>{' '}
+              <span className="status-success">MULTI-CHAIN</span>
             </div>
             <div>
-              <span className="opacity-70">Chain ID:</span> 73571
+              <span className="opacity-70">ETH Chain ID:</span> 73571
             </div>
             <div>
-              <span className="opacity-70">Subgraph:</span>{' '}
+              <span className="opacity-70">BASE Chain ID:</span> 8453
+            </div>
+            <div>
+              <span className="opacity-70">Subgraphs:</span>{' '}
               <span className="status-success">CONNECTED</span>
             </div>
           </div>
