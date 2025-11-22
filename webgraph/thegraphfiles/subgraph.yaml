@@ -30,9 +30,4 @@ dataSources:
         # Quantum-resistant ZK Transfer event (successful proofs)
         - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
           handler: handleZKTransfer
-      blockHandlers:
-        # Block handler to catch failed transactions (no contract changes needed!)
-        - handler: handleBlock
-          filter:
-            kind: call
       file: ./src/mapping.ts
