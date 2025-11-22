@@ -133,3 +133,20 @@
 - Security target: 128 bits
 - FRI folding factor: 4
 - Number of FRI queries: 30
+
+---
+
+## Deployment Addresses (Tenderly Fork, Chain 73571)
+
+**RPC URL**: `https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f`
+
+**Current dApp Configuration:**
+- **Token**: `0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC`
+- **Merchant**: `0x056cb77995eC5ef2da35CfD02a547058c6D14d84`
+- **LZ Endpoint**: `0x1a44076050125825900e736c501f859c50fE728c`
+
+**Deploy Command:**
+```bash
+PRIVATE_KEY=<key> LZ_ENDPOINT=0x1a44076050125825900e736c501f859c50fE728c \
+forge script script/Deploy.s.sol:DeployScript --rpc-url <RPC_URL> --broadcast
+```
