@@ -37,6 +37,18 @@ function App() {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
         }
+
+        // Check if Snap is already installed
+        try {
+          const snaps = await (window as any).ethereum.request({
+            method: 'wallet_getSnaps',
+          });
+          if (snaps[SNAP_ID]) {
+            setSnapInstalled(true);
+          }
+        } catch (e) {
+          console.log('Could not check snaps');
+        }
       }
     };
     init();
