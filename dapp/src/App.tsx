@@ -42,6 +42,13 @@ function App() {
     init();
   }, []);
 
+  // Auto-refresh info when account changes
+  useEffect(() => {
+    if (account && snapInstalled) {
+      refreshInfo();
+    }
+  }, [account, snapInstalled]);
+
   // Connect wallet
   const connectWallet = async () => {
     try {
@@ -267,29 +274,35 @@ function App() {
             <>
               {/* Account Info */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-500">Connected</div>
-                <div className="font-mono text-sm truncate">{account}</div>
-                {accountInfo && (
-                  <div className="mt-3 space-y-1">
-                    <div className="flex justify-between">
+                <div className="text-sm text-gray-500">Your Wallet</div>
+                <div className="font-mono text-xs truncate text-gray-600">{account}</div>
+                {accountInfo ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Balance:</span>
-                      <span className="font-semibold">{accountInfo.balance} LZPQ</span>
+                      <span className="font-semibold text-lg">{parseFloat(accountInfo.balance).toFixed(2)} LZPQ</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">ZK Guard:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Protection:</span>
                       <span className={accountInfo.isGuarded ? 'text-green-600 font-semibold' : 'text-gray-400'}>
-                        {accountInfo.isGuarded ? '🔒 Enabled' : 'Disabled'}
+                        {accountInfo.isGuarded ? '🔒 Quantum Lock ON' : '🔓 Standard Mode'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Nonce:</span>
-                      <span>{accountInfo.nonce}</span>
-                    </div>
+                    {accountInfo.commitment !== '0x0000000000000000000000000000000000000000000000000000000000000000' && (
+                      <div className="text-xs text-gray-400">
+                        Transfers: {accountInfo.nonce}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-gray-500">
+                    Install Snap and click Refresh to load your info
                   </div>
                 )}
                 <button
                   onClick={refreshInfo}
-                  className="mt-3 text-sm text-purple-600 hover:text-purple-800"
+                  disabled={!snapInstalled}
+                  className="mt-3 text-sm text-purple-600 hover:text-purple-800 disabled:text-gray-400"
                 >
                   ↻ Refresh
                 </button>
