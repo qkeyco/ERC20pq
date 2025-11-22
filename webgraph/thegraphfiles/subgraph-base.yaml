@@ -1,0 +1,37 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ERC21PQToken
+    network: base  # Base L2 network
+    source:
+      # TODO: Replace with your Base contract address
+      address: '0x0000000000000000000000000000000000000000'
+      abi: ERC21PQToken
+      # TODO: Replace with your Base deployment block
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+        - ZKTransfer
+        - ZKProofFailed
+        - ZKStats
+      abis:
+        - name: ERC21PQToken
+          file: ./abiERC21PQToken.json
+      eventHandlers:
+        # Standard ERC20 Transfer event (baseline)
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        # Quantum-resistant ZK Transfer event (successful proofs)
+        - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
+          handler: handleZKTransfer
+        # Failed ZK proof attempts - COMMENTED OUT until contract is updated
+        # Uncomment this after adding ZKProofFailed event to contract:
+        # - event: ZKProofFailed(indexed address,indexed address,uint256)
+        #   handler: handleZKProofFailed
+      file: ./src/mapping.ts
