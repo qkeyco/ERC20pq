@@ -307,14 +307,14 @@ function App() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {/* Only show Bind HD if no commitment yet */}
+                {/* Setup quantum protection if no commitment yet */}
                 {accountInfo && accountInfo.commitment === '0x0000000000000000000000000000000000000000000000000000000000000000' && (
                   <button
                     onClick={bindHD}
                     disabled={loading}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : 'Bind HD Commitment'}
+                    {loading ? 'Setting up...' : '🔐 Setup Quantum Protection'}
                   </button>
                 )}
 

@@ -122,11 +122,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         params: {
           type: 'confirmation',
           content: panel([
-            heading('Bind HD Commitment'),
-            text('This will bind your HD commitment to the token contract.'),
-            text(`Token: ${params.tokenAddress}`),
+            heading('Setup Quantum Protection'),
+            text('This creates your secure quantum-resistant key.'),
+            text('Your secret is stored safely in this Snap.'),
             copyable(commitment.slice(0, 20) + '...'),
-            text('This commitment proves ownership without revealing your secret.'),
+            text('Only you can authorize transfers with this protection.'),
           ]),
         },
       });
