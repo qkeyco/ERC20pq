@@ -96,3 +96,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+package.json
+.yarnrc.yml
+.yarn/releases/yarn-3.2.1.cjs
