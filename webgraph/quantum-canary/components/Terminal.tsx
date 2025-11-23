@@ -120,6 +120,9 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
 
       // Ready for input
       term.write('quantum-canary> ');
+
+      // Auto-focus terminal for immediate input
+      term.focus();
     };
 
     runBootSequence();
@@ -189,17 +192,24 @@ export default function Terminal({ onCommandResult }: TerminalProps) {
       }
     };
 
+    // Focus terminal on click
+    const handleClick = () => {
+      term.focus();
+    };
+
     window.addEventListener('resize', handleResize);
+    terminalRef.current?.addEventListener('click', handleClick);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      terminalRef.current?.removeEventListener('click', handleClick);
       term.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   return (
-    <div className="terminal-wrapper h-full w-full">
+    <div className="terminal-wrapper h-full w-full cursor-text">
       <div ref={terminalRef} className="terminal h-full" />
     </div>
   );

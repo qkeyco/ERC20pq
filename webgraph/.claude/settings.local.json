@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
