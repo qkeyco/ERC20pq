@@ -66,7 +66,7 @@ body {
   box-shadow:
     0 0 10px rgba(0, 255, 0, 0.3),
     inset 0 0 20px rgba(0, 0, 0, 0.5);
-  padding: 40px;
+  padding: 40px 30px;
 }
 
 /* Terminal text */
@@ -121,15 +121,17 @@ body {
 
 /* Container */
 .container {
-  max-width: 800px;
+  max-width: 750px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -145,4 +147,10 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #00ff00;
   box-shadow: 0 0 10px #00ff00;
+}
+
+/* Ensure no extra margins or padding */
+body {
+  margin: 0 !important;
+  padding: 0 !important;
 }
