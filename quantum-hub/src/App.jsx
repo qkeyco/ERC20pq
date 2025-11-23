@@ -39,7 +39,7 @@ function App() {
         <h1 className="terminal-text-bright title">
           ╔══════════════════════════╗
           <br />
-          ║  ERC-21 PQ QUANTUM HUB  ║
+          ║ ERC-21 PQ QUANTUM HUB ║
           <br />
           ╚══════════════════════════╝
         </h1>
