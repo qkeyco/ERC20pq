@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-original if broken const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 'http://157.245.7.229:8000/subgraphs/name/ethereum-basic-event-handlers';
+const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 'http://157.245.7.229:8000/subgraphs/name/ethereum-basic-event-handlers';
 
 export async function POST(request: NextRequest) {
   try {

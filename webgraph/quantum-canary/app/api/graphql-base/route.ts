@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-original if broken const SUBGRAPH_BASE_URL = process.env.NEXT_PUBLIC_SUBGRAPH_BASE_URL || 'http://157.245.7.229:8000/subgraphs/name/qcanary-base';
+const SUBGRAPH_BASE_URL = process.env.NEXT_PUBLIC_SUBGRAPH_BASE_URL || 'http://157.245.7.229:8000/subgraphs/name/qcanary-base';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
