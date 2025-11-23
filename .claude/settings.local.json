@@ -8,7 +8,10 @@
       "Bash(git commit:*)",
       "Bash(npm i:*)",
       "Bash(forge test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

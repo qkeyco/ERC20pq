@@ -6,7 +6,11 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(cd:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { tenderlyClient, baseClient } from './apollo';
+import { apolloClient } from './apollo';
 
 export interface CommandResult {
   status: 'success' | 'error';
