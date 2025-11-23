@@ -67,7 +67,6 @@ export const commands: Record<string, (args: string[]) => Promise<CommandResult>
     message: `
 Available Commands:
   help              - Show this help message
-  test subgraph     - Test subgraph connection
   status            - Show current network status
   show zk [hours]   - Show ZK transfers (default: all time)
   proofs failed     - Show failed proofs and check alert threshold
@@ -77,42 +76,6 @@ Available Commands:
   clear             - Clear terminal
 `,
   }),
-
-  'test subgraph': async () => {
-    try {
-      const [ethResult, baseResult] = await Promise.all([
-        tenderlyClient.query({ query: GET_ZK_TRANSFERS, variables: { first: 5 } }),
-        baseClient.query({ query: GET_ZK_TRANSFERS, variables: { first: 5 } }),
-      ]);
-
-      if (ethResult.errors || baseResult.errors) {
-        const errors = [...(ethResult.errors || []), ...(baseResult.errors || [])];
-        return {
-          status: 'error',
-          message: `GraphQL Errors: ${errors.map(e => e.message).join(', ')}`,
-          data: errors,
-        };
-      }
-
-      const ethTransfers = ethResult.data?.zktransfers || [];
-      const baseTransfers = baseResult.data?.zktransfers || [];
-      const totalTransfers = ethTransfers.length + baseTransfers.length;
-
-      return {
-        status: 'success',
-        message: totalTransfers > 0
-          ? `✓ Both subgraphs connected! Found ${totalTransfers} ZK transfers (${ethTransfers.length} ETH, ${baseTransfers.length} BASE)`
-          : '✓ Both subgraphs connected! No ZK transfers yet',
-        data: [...ethTransfers.map((t: any) => ({ ...t, chain: 'ETH' })), ...baseTransfers.map((t: any) => ({ ...t, chain: 'BASE' }))],
-      };
-    } catch (error: any) {
-      return {
-        status: 'error',
-        message: `Connection Error: ${error.message}`,
-        data: error,
-      };
-    }
-  },
 
   'show zk': async (args: string[]) => {
     const hours = args[0] ? parseInt(args[0]) : null;
@@ -273,10 +236,6 @@ export function parseCommand(input: string): { command: string; args: string[] }
   const parts = trimmed.split(/\s+/);
 
   // Handle multi-word commands
-  if (parts.length >= 2 && parts[0] === 'test' && parts[1] === 'subgraph') {
-    return { command: 'test subgraph', args: parts.slice(2) };
-  }
-
   if (parts.length >= 2 && parts[0] === 'show' && parts[1] === 'zk') {
     return { command: 'show zk', args: parts.slice(2) };
   }
