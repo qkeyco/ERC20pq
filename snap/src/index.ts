@@ -188,11 +188,83 @@ function fieldExp(base: bigint, exp: bigint): bigint {
 }
 
 /**
+ * Modular inverse using Fermat's little theorem: a^(-1) = a^(p-2) mod p
+ */
+function fieldInverse(a: bigint): bigint {
+  if (a === BigInt(0)) {
+    throw new Error('Cannot compute inverse of zero');
+  }
+  // Fermat's little theorem: a^(p-1) = 1 mod p, so a^(-1) = a^(p-2) mod p
+  return fieldExp(a, STARK_PRIME - BigInt(2));
+}
+
+/**
+ * Field division: a / b = a * b^(-1)
+ */
+function fieldDiv(a: bigint, b: bigint): bigint {
+  return fieldMul(a, fieldInverse(b));
+}
+
+/**
  * Convert bigint to 32-byte Uint8Array
  */
 function bigintToBytes32(value: bigint): Uint8Array {
   const hex = value.toString(16).padStart(64, '0');
   return ethers.getBytes('0x' + hex);
+}
+
+/**
+ * Evaluate trace polynomial at a point using barycentric interpolation
+ * The trace values are at points omega^0, omega^1, ..., omega^(n-1)
+ * where omega is a primitive nth root of unity
+ */
+function evaluateTraceAtPoint(trace: bigint[], point: bigint): bigint {
+  const n = BigInt(trace.length);
+
+  // Generator for the trace domain (primitive nth root of unity)
+  // omega^n = 1 mod p
+  // For n=256, we need a 256th root of unity
+  // Using: omega = g^((p-1)/n) where g is a generator
+  const g = BigInt(3); // Generator of multiplicative group
+  const omega = fieldExp(g, (STARK_PRIME - BigInt(1)) / n);
+
+  // Check if point is in the domain
+  let omegaPow = BigInt(1);
+  for (let i = 0; i < trace.length; i++) {
+    if (omegaPow === point) {
+      return trace[i];
+    }
+    omegaPow = fieldMul(omegaPow, omega);
+  }
+
+  // Barycentric interpolation formula:
+  // L(x) = (x^n - 1) / n * sum_{i=0}^{n-1} (trace[i] * omega^i) / (x - omega^i)
+
+  // Compute x^n - 1
+  const xn_minus_1 = fieldSub(fieldExp(point, n), BigInt(1));
+
+  // Compute the sum
+  let sum = BigInt(0);
+  omegaPow = BigInt(1);
+
+  for (let i = 0; i < trace.length; i++) {
+    // Compute omega^i / (x - omega^i)
+    const denom = fieldSub(point, omegaPow);
+    if (denom === BigInt(0)) {
+      return trace[i]; // Point is in domain
+    }
+
+    const term = fieldDiv(fieldMul(trace[i], omegaPow), denom);
+    sum = fieldAdd(sum, term);
+
+    omegaPow = fieldMul(omegaPow, omega);
+  }
+
+  // Compute n^(-1) mod p
+  const nInv = fieldInverse(n);
+
+  // Result = (x^n - 1) / n * sum
+  return fieldMul(fieldMul(xn_minus_1, nInv), sum);
 }
 
 /**
@@ -351,11 +423,21 @@ async function generateStarkProof(
   const oodPoint = transcript.squeeze();
 
   // Step 8: Compute OOD evaluations
-  const traceOodEval = fieldExp(oodPoint, BigInt(TRACE_LENGTH - 1));
-  const compositionOodEval = fieldMul(
+  // Evaluate trace polynomial at OOD point
+  const traceOodEval = evaluateTraceAtPoint(trace, oodPoint);
+
+  // Compute vanishing polynomial at OOD point: x^TRACE_LENGTH - 1
+  const vanishing = fieldSub(fieldExp(oodPoint, BigInt(TRACE_LENGTH)), BigInt(1));
+
+  // Constraint evaluation: (traceEval - commitment) * alpha
+  const constraintAtOod = fieldMul(
     fieldSub(traceOodEval, commitmentReduced),
     compositionAlpha
   );
+
+  // Composition = constraint / vanishing
+  const compositionOodEval = fieldDiv(constraintAtOod, vanishing);
+
   const oodEvaluations = [traceOodEval, compositionOodEval];
 
   // Absorb OOD evaluations

@@ -5,11 +5,13 @@ const DemoPage: React.FC = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Hero Section */}
       <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 px-8">
-        <h1 className="text-6xl font-bold text-center mb-6">
-          <span className="text-blue-400">ERC-21</span>
-        </h1>
+        <img src="/images/qsave-logo.svg" alt="QSAVE" className="w-32 h-32 mb-4" />
+        <h1 className="text-5xl font-bold text-center mb-2 text-green-400">QSAVE</h1>
+        <h2 className="text-6xl font-bold text-center mb-6">
+          <span className="text-blue-400">"ERC-21"</span>
+        </h2>
         <h2 className="text-4xl font-bold text-center mb-4">
-          Quantum-Resistant Token Standard
+          Quantum-Resistant ERC-20 Token Standard
         </h2>
         <p className="text-xl text-gray-300 text-center max-w-2xl mb-8">
           Protect your assets from quantum computing threats with STARK-based ownership proofs

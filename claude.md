@@ -33,6 +33,10 @@
 ### Deployment
 - Local: `forge script script/Deploy.s.sol:DeployLocal --broadcast`
 - Testnet: `forge script script/Deploy.s.sol:DeployScript --rpc-url <RPC_URL> --broadcast`
+- **Private Key**: Use Anvil default key for Tenderly deployments:
+  ```bash
+  export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+  ```
 
 ### Network Configuration
 - **Network**: Tenderly Fork of Base Mainnet
@@ -42,10 +46,11 @@
 - **LayerZero Endpoint**: 0x1a44076050125825900e736c501f859c50fE728c (Base V2)
 
 ### Deployed Contracts (Tenderly Base)
-- **Token**: 0x420366e5f35d53a2c0E3192f0C8fc6449509C875
-- **Merchant**: 0x4eE979DDDb05523A85C40795c0389B9e08e3c693
-- **Verifier**: 0x23867734fEB2419bFFbE6203f726D3ED1f47b758
-- **DEX**: 0x895bAE9C00D2670feE66325Fc17b56440deEB002
+- **Token**: 0xfa59549200102B7d50E9E8de3989DF40DEb55deC
+- **Merchant**: 0xA335539253B9F81CA57A3940F59635A3b1EEEb24
+- **Verifier**: 0xF937ED3f883065Cd982c22030D62C0C293718035
+- **DEX**: 0x7485df74312d9b444aC4E004cAC4Ccd48b6f9cF3
+- **MockUSD**: 0x88aa4F7840F7F3560872825DccD38AAC079CFf3d
 
 ### Snap Deployment
 - Local development: `cd snap && yarn build && yarn start` (serves on port 8080)

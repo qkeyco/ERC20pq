@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import detectEthereumProvider from '@metamask/detect-provider';
 
-// Snap ID - npm published snap
+// Snap ID - npm package
 const SNAP_ID = 'npm:@jamesptagg/erc21pq-snap';
 
 // Network configurations
@@ -11,15 +11,15 @@ const NETWORKS = {
     name: 'Tenderly Ethereum',
     chainId: '0x11F63', // 73571
     rpcUrl: 'https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f',
-    token: '0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC',
-    merchant: '0x056cb77995eC5ef2da35CfD02a547058c6D14d84',
+    token: '0xCe1C6851843125167C223423BB3b88c465b96107',
+    merchant: '0xA29303ad549A80f1bF4ACBF3835464AD4190407c',
   },
   'tenderly-base': {
     name: 'Tenderly Base',
-    chainId: '0x210E', // 8462
-    rpcUrl: 'https://virtual.base.eu.rpc.tenderly.co/18d3110d-0934-4f12-b889-58fa6fa45d72',
-    token: '0x7F56E701a5E3cB764Aaf4C0605699dB517F4Fce8',
-    merchant: '0x9aA36e49a11a4832B57C954c605692327b2DDd4f',
+    chainId: '0x2105', // 8453
+    rpcUrl: 'https://virtual.base.us-west.rpc.tenderly.co/faa3abed-5400-4dc8-87ec-6091314a56cf',
+    token: '0xfa59549200102B7d50E9E8de3989DF40DEb55deC',
+    merchant: '0xA335539253B9F81CA57A3940F59635A3b1EEEb24',
   },
 };
 
@@ -41,7 +41,7 @@ function App() {
   const [txStatus, setTxStatus] = useState<string>('');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>('tenderly-eth');
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>('tenderly-base');
   const [currentChainId, setCurrentChainId] = useState<string>('');
 
   // Check if MetaMask chain matches selected network (normalize to lowercase for comparison)
@@ -205,17 +205,20 @@ function App() {
   // Install Snap
   const installSnap = async () => {
     try {
-      await (window as any).ethereum.request({
+      setTxStatus('Installing snap...');
+      console.log('Installing snap:', SNAP_ID);
+      const result = await (window as any).ethereum.request({
         method: 'wallet_requestSnaps',
         params: {
           [SNAP_ID]: {},
         },
       });
+      console.log('Snap install result:', result);
       setSnapInstalled(true);
       setTxStatus('Snap installed successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to install snap:', error);
-      setTxStatus('Failed to install snap');
+      setTxStatus(`Failed: ${error.message || error}`);
     }
   };
 
@@ -227,15 +230,8 @@ function App() {
     }
     setTxStatus('Loading account info...');
     try {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-
-      // Check network matches selected
-      const network = await provider.getNetwork();
-      const expectedId = BigInt(parseInt(NETWORKS[selectedNetwork].chainId, 16));
-      if (network.chainId !== expectedId) {
-        setTxStatus(`Wrong network (chain ${network.chainId}). Expected ${NETWORKS[selectedNetwork].name} (chain ${expectedId})`);
-        return;
-      }
+      // Use dedicated provider with correct RPC URL
+      const provider = new ethers.JsonRpcProvider(NETWORKS[selectedNetwork].rpcUrl);
 
       const contract = new ethers.Contract(getTokenAddress(), [
         'function balanceOf(address) view returns (uint256)',
@@ -307,6 +303,8 @@ function App() {
         },
       });
       const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+      await waitForTx(txHash);
       setTxStatus(`Protection enabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
@@ -331,6 +329,8 @@ function App() {
         },
       });
       const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+      await waitForTx(txHash);
       setTxStatus(`ZK guard enabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
@@ -355,6 +355,8 @@ function App() {
         },
       });
       const txHash = await sendSnapTx(result);
+      setTxStatus(`Confirming...`);
+      await waitForTx(txHash);
       setTxStatus(`ZK guard disabled! Tx: ${txHash.slice(0, 10)}...`);
       await refreshInfo();
     } catch (error: any) {
