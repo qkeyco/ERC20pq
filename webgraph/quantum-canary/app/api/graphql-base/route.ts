@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SUBGRAPH_BASE_URL = process.env.NEXT_PUBLIC_SUBGRAPH_BASE_URL || 'http://159.203.84.39:1610/graphql';
-//original if broken const SUBGRAPH_BASE_URL = process.env.NEXT_PUBLIC_SUBGRAPH_BASE_URL || 'http://157.245.7.229:8000/subgraphs/name/qcanary-base';
+original if broken const SUBGRAPH_BASE_URL = process.env.NEXT_PUBLIC_SUBGRAPH_BASE_URL || 'http://157.245.7.229:8000/subgraphs/name/qcanary-base';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
