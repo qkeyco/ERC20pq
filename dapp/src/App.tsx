@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import detectEthereumProvider from '@metamask/detect-provider';
 
-// Snap ID - update with actual published snap ID
-const SNAP_ID = 'local:http://localhost:8080';
+// Snap ID - npm published snap
+const SNAP_ID = 'npm:@jamesptagg/erc21pq-snap';
 
 // Network configurations
 const NETWORKS = {
@@ -42,6 +42,43 @@ function App() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>('tenderly-eth');
+  const [currentChainId, setCurrentChainId] = useState<string>('');
+
+  // Check if MetaMask chain matches selected network (normalize to lowercase for comparison)
+  const expectedChainId = NETWORKS[selectedNetwork].chainId.toLowerCase();
+  const networkMismatch = currentChainId && currentChainId.toLowerCase() !== expectedChainId;
+
+  // Listen for chain changes
+  useEffect(() => {
+    const checkChain = async () => {
+      if ((window as any).ethereum) {
+        const chainId = await (window as any).ethereum.request({ method: 'eth_chainId' });
+        setCurrentChainId(chainId);
+      }
+    };
+    checkChain();
+
+    const handleChainChanged = (chainId: string) => {
+      setCurrentChainId(chainId);
+      // Auto-sync dropdown to match MetaMask network
+      const matchingNetwork = Object.entries(NETWORKS).find(
+        ([_, net]) => net.chainId.toLowerCase() === chainId.toLowerCase()
+      );
+      if (matchingNetwork) {
+        setSelectedNetwork(matchingNetwork[0] as NetworkKey);
+      }
+    };
+
+    if ((window as any).ethereum) {
+      (window as any).ethereum.on('chainChanged', handleChainChanged);
+    }
+
+    return () => {
+      if ((window as any).ethereum) {
+        (window as any).ethereum.removeListener('chainChanged', handleChainChanged);
+      }
+    };
+  }, []);
 
   // Get current network config - use functions to always get fresh values
   const getTokenAddress = () => NETWORKS[selectedNetwork].token;
@@ -50,6 +87,7 @@ function App() {
   // Switch network in MetaMask
   const switchNetwork = async (networkKey: NetworkKey) => {
     const netConfig = NETWORKS[networkKey];
+    setTxStatus(`Switching to ${netConfig.name}...`);
     try {
       await (window as any).ethereum.request({
         method: 'wallet_switchEthereumChain',
@@ -57,6 +95,40 @@ function App() {
       });
       setSelectedNetwork(networkKey);
       setTxStatus(`Switched to ${netConfig.name}`);
+      // Force refresh after state update
+      setTimeout(() => {
+        if (account && snapInstalled) {
+          setAccountInfo(null);
+          // Manually call contract with new addresses
+          const tokenAddr = NETWORKS[networkKey].token;
+          const provider = new ethers.BrowserProvider((window as any).ethereum);
+          const contract = new ethers.Contract(tokenAddr, [
+            'function balanceOf(address) view returns (uint256)',
+            'function hdCommitment(address) view returns (bytes32)',
+            'function zkNonce(address) view returns (uint256)',
+            'function zkGuardEnabled(address) view returns (bool)',
+          ], provider);
+
+          Promise.all([
+            contract.balanceOf(account),
+            contract.hdCommitment(account),
+            contract.zkNonce(account),
+            contract.zkGuardEnabled(account),
+          ]).then(([balance, commitment, nonce, isGuarded]) => {
+            setAccountInfo({
+              address: account,
+              balance: ethers.formatEther(balance),
+              commitment: commitment,
+              nonce: nonce.toString(),
+              isGuarded: isGuarded,
+            });
+            setTxStatus('');
+          }).catch(err => {
+            console.error('Failed to load info:', err);
+            setTxStatus('Failed to load account info');
+          });
+        }
+      }, 100);
     } catch (switchError: any) {
       // Chain not added, add it
       if (switchError.code === 4902) {
@@ -157,10 +229,11 @@ function App() {
     try {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
 
-      // Check network
+      // Check network matches selected
       const network = await provider.getNetwork();
-      if (network.chainId !== 73571n) {
-        setTxStatus(`Wrong network (chain ${network.chainId}). Click the globe icon in MetaMask and select "EthereumPQ" (chain 73571)`);
+      const expectedId = BigInt(parseInt(NETWORKS[selectedNetwork].chainId, 16));
+      if (network.chainId !== expectedId) {
+        setTxStatus(`Wrong network (chain ${network.chainId}). Expected ${NETWORKS[selectedNetwork].name} (chain ${expectedId})`);
         return;
       }
 
@@ -447,6 +520,16 @@ function App() {
             ))}
           </select>
         </div>
+
+        {/* Network Mismatch Warning */}
+        {networkMismatch && (
+          <div className="mb-4 bg-red-500/20 border border-red-500 rounded-lg p-3 text-center">
+            <p className="text-red-200 text-sm font-medium">
+              ⚠️ Wrong network (chain {parseInt(currentChainId, 16)}).
+              Click the globe icon in MetaMask and select "{NETWORKS[selectedNetwork].name}" (chain {parseInt(expectedChainId, 16)})
+            </p>
+          </div>
+        )}
 
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
