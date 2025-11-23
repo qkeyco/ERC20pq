@@ -64,6 +64,20 @@ type ZKGuardEnabledEvent @entity(immutable: true) {
 }
 
 """
+Transfer blocked by ZK guard (thief attempt)
+"""
+type TransferBlocked @entity(immutable: true) {
+  id: Bytes!
+  from: Account!
+  to: Account!
+  amount: BigInt!
+  reason: String!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+"""
 Global statistics
 """
 type TokenStats @entity {
@@ -73,4 +87,5 @@ type TokenStats @entity {
   totalZKTransfers: BigInt!
   totalGuardedAccounts: BigInt!
   totalCommitments: BigInt!
+  totalBlockedAttempts: BigInt!
 }

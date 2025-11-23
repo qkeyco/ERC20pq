@@ -4,6 +4,7 @@ import {
   HDCommitmentBound as HDCommitmentBoundEvent,
   ZKGuardEnabled as ZKGuardEnabledEvent,
   ZKTransfer as ZKTransferEvent,
+  TransferBlocked as TransferBlockedEvent,
 } from "../generated/ERC21PQToken/ERC21PQToken";
 import {
   Account,
@@ -11,6 +12,7 @@ import {
   ZKTransfer,
   HDCommitmentBound,
   ZKGuardEnabledEvent as ZKGuardEnabledEntity,
+  TransferBlocked,
   TokenStats,
 } from "../generated/schema";
 
@@ -38,6 +40,7 @@ function getOrCreateStats(): TokenStats {
     stats.totalZKTransfers = BigInt.fromI32(0);
     stats.totalGuardedAccounts = BigInt.fromI32(0);
     stats.totalCommitments = BigInt.fromI32(0);
+    stats.totalBlockedAttempts = BigInt.fromI32(0);
     stats.save();
   }
   return stats;
@@ -159,5 +162,28 @@ export function handleZKTransfer(event: ZKTransferEvent): void {
   // Update stats
   let stats = getOrCreateStats();
   stats.totalZKTransfers = stats.totalZKTransfers.plus(BigInt.fromI32(1));
+  stats.save();
+}
+
+export function handleTransferBlocked(event: TransferBlockedEvent): void {
+  let entity = new TransferBlocked(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  );
+
+  let fromAccount = getOrCreateAccount(event.params.from);
+  let toAccount = getOrCreateAccount(event.params.to);
+
+  entity.from = fromAccount.id;
+  entity.to = toAccount.id;
+  entity.amount = event.params.amount;
+  entity.reason = event.params.reason;
+  entity.blockNumber = event.block.number;
+  entity.blockTimestamp = event.block.timestamp;
+  entity.transactionHash = event.transaction.hash;
+  entity.save();
+
+  // Update stats
+  let stats = getOrCreateStats();
+  stats.totalBlockedAttempts = stats.totalBlockedAttempts.plus(BigInt.fromI32(1));
   stats.save();
 }

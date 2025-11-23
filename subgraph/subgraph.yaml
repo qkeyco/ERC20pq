@@ -31,4 +31,6 @@ dataSources:
           handler: handleZKGuardEnabled
         - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
           handler: handleZKTransfer
+        - event: TransferBlocked(indexed address,indexed address,uint256,string)
+          handler: handleTransferBlocked
       file: ./src/mapping.ts

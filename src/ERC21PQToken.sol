@@ -64,6 +64,9 @@ contract ERC21PQToken is OFT {
     /// @notice Emitted when disabling ZK guard fails
     event ZKDisableFailed(address indexed account, string reason);
 
+    /// @notice Emitted when an unauthorized transfer attempt is blocked
+    event TransferBlocked(address indexed from, address indexed to, uint256 amount, string reason);
+
     /// @notice Emitted when a ZK-verified cross-chain send is executed
     event ZKSend(
         bytes32 indexed guid,
@@ -293,6 +296,31 @@ contract ERC21PQToken is OFT {
 
         emit ZKTransfer(from, to, amount, proofNonce);
 
+        return true;
+    }
+
+    /// @notice Try to transfer tokens (emits event on failure instead of reverting)
+    /// @dev Used for testing/demo - allows Graph to index failed attempts
+    /// @param to The recipient address
+    /// @param amount The amount to transfer
+    /// @return success True if transfer succeeded
+    function tryTransfer(address to, uint256 amount) external returns (bool success) {
+        address from = msg.sender;
+
+        // Check ZK guard
+        if (zkGuardEnabled[from]) {
+            emit TransferBlocked(from, to, amount, "ZK guard enabled - use transferZK");
+            return false;
+        }
+
+        // Check balance
+        if (balanceOf(from) < amount) {
+            emit TransferBlocked(from, to, amount, "Insufficient balance");
+            return false;
+        }
+
+        // Execute transfer
+        _transfer(from, to, amount);
         return true;
     }
 

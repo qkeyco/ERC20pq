@@ -18,8 +18,8 @@ const NETWORKS = {
     name: 'Tenderly Base',
     chainId: '0x210E', // 8462
     rpcUrl: 'https://virtual.base.eu.rpc.tenderly.co/18d3110d-0934-4f12-b889-58fa6fa45d72',
-    token: '0x0D16B604602D7081E5DD9f0A1fAD79a9A31782fC',
-    merchant: '0xcc164852578C2f4972926c1f8B31b660b3627b16',
+    token: '0x7F56E701a5E3cB764Aaf4C0605699dB517F4Fce8',
+    merchant: '0x9aA36e49a11a4832B57C954c605692327b2DDd4f',
   },
 };
 
@@ -416,7 +416,7 @@ function App() {
     setLoading(false);
   };
 
-  // Simulate Thief - try regular transfer (will fail)
+  // Simulate Thief - try transfer without ZK proof (emits event for Graph)
   const simulateThief = async () => {
     setLoading(true);
     setTxStatus('🦹 Thief attempting to steal tokens...');
@@ -425,23 +425,35 @@ function App() {
       const signer = await provider.getSigner();
 
       const contract = new ethers.Contract(getTokenAddress(), [
-        'function transfer(address to, uint256 amount) returns (bool)',
+        'function tryTransfer(address to, uint256 amount) returns (bool)',
       ], signer);
 
-      // Try regular transfer - this will fail if ZK guard is enabled
-      // Force send with manual gas limit to bypass estimation and show MetaMask confirmation
-      const tx = await contract.transfer(getMerchantAddress(), ethers.parseEther('100'), {
-        gasLimit: 100000,
-      });
-      await tx.wait();
+      // Try transfer without ZK proof - emits TransferBlocked event for Graph indexing
+      const tx = await contract.tryTransfer(getMerchantAddress(), ethers.parseEther('100'));
+      const receipt = await tx.wait();
 
-      setTxStatus('❌ Security breach! Tokens stolen!');
-    } catch (error: any) {
-      if (error.message.includes('ZKGuardEnabled') || error.message.includes('reverted')) {
-        setTxStatus('✅ Theft BLOCKED! ZK Guard protected your tokens. Attacker needs your HD secret.');
+      // Check if transfer succeeded (returns false if blocked)
+      // Look for TransferBlocked event in logs
+      const blocked = receipt.logs.some((log: any) => {
+        try {
+          const iface = new ethers.Interface([
+            'event TransferBlocked(address indexed from, address indexed to, uint256 amount, string reason)'
+          ]);
+          iface.parseLog({ topics: log.topics, data: log.data });
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
+      if (blocked) {
+        setTxStatus('✅ Theft BLOCKED! ZK Guard protected your tokens. Event logged for The Graph.');
       } else {
-        setTxStatus(`✅ Theft blocked: ${error.message.slice(0, 50)}...`);
+        setTxStatus('❌ Security breach! Tokens stolen!');
+        await refreshInfo();
       }
+    } catch (error: any) {
+      setTxStatus(`Error: ${error.message.slice(0, 50)}...`);
     }
     setLoading(false);
   };
