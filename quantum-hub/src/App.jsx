@@ -37,7 +37,9 @@ function App() {
     <div className="monitor scanlines">
       <div className="container terminal-box">
         <h1 className="terminal-text-bright title">
-          ║ ERC-21 PQ QUANTUM HUB ║
+          ║ ERC-21 PQ ║
+          <br />
+          ║ QUANTUM HUB ║
         </h1>
 
         <div className="terminal-text" style={{ textAlign: 'center', marginBottom: '30px', fontSize: '24px' }}>

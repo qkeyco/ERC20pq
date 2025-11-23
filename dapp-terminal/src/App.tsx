@@ -511,8 +511,8 @@ function App() {
         {/* Header */}
         <div className="text-center mb-8 border-b-2 border-terminal-green pb-6">
           <pre className="terminal-text-bright text-2xl md:text-4xl mb-2">
-║ ERC-21 PQ TOKEN ║
-║ QUANTUM-RESISTANT OWNERSHIP ║
+║ ERC-21 PQ ║
+║ TOKEN WALLET ║
           </pre>
           <p className="terminal-text text-base md:text-lg">
             &gt; STATUS: ONLINE | PROTECTION: ACTIVE
