@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "MetaMask Snap for ERC-21 ZK-guarded transfers with post-quantum security",
   "proposedName": "ERC21PQ Snap",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/erc21pq/snap.git"
   },
   "source": {
-    "shasum": "sb5hSU+L9LY3fi1+ks8VCSsabWVwyMfKXzZwfR8imws=",
+    "shasum": "siPh3Lk08Yji9l2gISylNitIm/gEffYfCCpTuD35Udo=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

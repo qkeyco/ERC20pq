@@ -20,8 +20,10 @@ Shared configuration for Will's Graph AMP setup.
 - **RPC URL**: `https://virtual.mainnet.us-west.rpc.tenderly.co/8d34857c-35dd-4e13-b36d-2688a4377b1f`
 
 **Deployed Contracts:**
-- Token: `0x9a1766F6CC8d02CC5C9b449958409A8F025b03BC`
-- Merchant: `0x056cb77995eC5ef2da35CfD02a547058c6D14d84`
+- Token: `0xCe1C6851843125167C223423BB3b88c465b96107`
+- Merchant: `0xA29303ad549A80f1bF4ACBF3835464AD4190407c`
+- Verifier: `0x8d6e07A6C15E1cdB881d665E0dA4D7C2004a1929`
+- DEX: `0xa3F8716040f3eDfD012632c2299d3601eB6B56f6`
 
 ---
 
