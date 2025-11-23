@@ -72,6 +72,7 @@ Available Commands:
   show zk [hours]   - Show ZK transfers (default: all time)
   proofs failed     - Show failed proofs and check alert threshold
   stats             - Show global ZK transfer statistics
+  wallet            - Open quantum-safe wallet interface
   chain switch      - Switch networks (coming soon)
   clear             - Clear terminal
 `,
@@ -248,6 +249,17 @@ Alert Threshold: ${process.env.NEXT_PUBLIC_ALERT_THRESHOLD || '20'} failed proof
 Status: ONLINE
 `,
   }),
+
+  wallet: async () => {
+    // Open wallet in new tab
+    if (typeof window !== 'undefined') {
+      window.open('https://wallet.quantumcanary.online', '_blank');
+    }
+    return {
+      status: 'success',
+      message: '✓ Opening quantum-safe wallet interface...',
+    };
+  },
 
   clear: async () => ({
     status: 'success',
