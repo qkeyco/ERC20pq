@@ -8,7 +8,7 @@ dataSources:
     source:
       # ERC21PQToken deployed on Tenderly Base Fork (Chain ID: 8453)
       # Using 'mainnet' network label because Graph Node uses same Tenderly RPC
-      address: '0xfc663c1c06764c9ecfcbf26444bd2e69068f8130'
+      address: '0x420366e5f35d53a2c0E3192f0C8fc6449509C875'
       abi: ERC21PQToken
       # Starting from recent block (adjust if contract was deployed earlier)
       startBlock: 23650000
@@ -31,4 +31,7 @@ dataSources:
         # Quantum-resistant ZK Transfer event (successful proofs)
         - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
           handler: handleZKTransfer
+        # Failed ZK proof event (quantum crack detection)
+        - event: ZKProofFailed(indexed address,indexed address,uint256,string)
+          handler: handleZKProofFailed
       file: ./src/mapping.ts

@@ -30,4 +30,7 @@ dataSources:
         # Quantum-resistant ZK Transfer event (successful proofs)
         - event: ZKTransfer(indexed address,indexed address,uint256,uint256)
           handler: handleZKTransfer
+        # Failed ZK proof event (quantum crack detection)
+        - event: ZKProofFailed(indexed address,indexed address,uint256,string)
+          handler: handleZKProofFailed
       file: ./src/mapping.ts

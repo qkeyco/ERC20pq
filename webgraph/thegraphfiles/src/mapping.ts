@@ -1,7 +1,8 @@
 import { BigInt } from "@graphprotocol/graph-ts"
 import {
   Transfer as TransferEvent,
-  ZKTransfer as ZKTransferEvent
+  ZKTransfer as ZKTransferEvent,
+  ZKProofFailed as ZKProofFailedEvent
 } from "../generated/ERC21PQToken/ERC21PQToken"
 import { Transfer, ZKTransfer, ZKProofFailed, ZKStats } from "../generated/schema"
 
@@ -67,4 +68,23 @@ function updateStats(eventType: string, timestamp: BigInt): void {
 
   stats.lastUpdated = timestamp
   stats.save()
+}
+
+// Handler for failed ZK proofs (quantum crack detection)
+export function handleZKProofFailed(event: ZKProofFailedEvent): void {
+  let entity = new ZKProofFailed(
+    event.transaction.hash.concatI32(event.logIndex.toI32())
+  )
+
+  entity.from = event.params.from
+  entity.to = event.params.to
+  entity.amount = event.params.amount
+  entity.blockNumber = event.block.number
+  entity.timestamp = event.block.timestamp
+  entity.transactionHash = event.transaction.hash
+
+  entity.save()
+
+  // Update stats
+  updateStats("zk_failed", event.block.timestamp)
 }
