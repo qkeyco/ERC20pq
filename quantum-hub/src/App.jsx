@@ -17,11 +17,6 @@ const links = [
     description: 'Secondary Quantum Wallet'
   },
   {
-    title: 'THE GRAPH AMP',
-    url: 'http://159.203.84.39:7402/?pgsql=postgres&username=postgres&db=amp&ns=public',
-    description: 'SQL Analytics Interface'
-  },
-  {
     title: 'GRAPHIQL',
     url: 'http://157.245.7.229:8000/subgraphs/name/qcanary/graphql',
     description: 'GraphQL Query Interface'
